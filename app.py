@@ -87,60 +87,6 @@ class ClickableVideoLabel(QLabel):
 
 MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
     MudraEntry(
-        name="PlaceHolder3",
-        sketch_path=ASSETS_DIR / "pathaka_sketch.png",
-        interpretations=(
-            Interpretation(
-                label="Blessing",
-                description="Used as an open-palmed gesture of blessing, assurance, or calm restraint.",
-            ),
-            Interpretation(
-                label="Stop",
-                description="Can be read as a firm stopping gesture or a sign of setting a boundary.",
-            ),
-            Interpretation(
-                label="Mirror",
-                video_path=ASSETS_DIR / "pathaka_mirror.MOV",
-            ),
-        ),
-    ),
-    MudraEntry(
-        name="PlaceHolder2",
-        sketch_path=ASSETS_DIR / "pathaka_sketch.png",
-        interpretations=(
-            Interpretation(
-                label="Blessing",
-                description="Used as an open-palmed gesture of blessing, assurance, or calm restraint.",
-            ),
-            Interpretation(
-                label="Stop",
-                description="Can be read as a firm stopping gesture or a sign of setting a boundary.",
-            ),
-            Interpretation(
-                label="Mirror",
-                video_path=ASSETS_DIR / "pathaka_mirror.MOV",
-            ),
-        ),
-    ),
-    MudraEntry(
-        name="PlaceHolder1",
-        sketch_path=ASSETS_DIR / "pathaka_sketch.png",
-        interpretations=(
-            Interpretation(
-                label="Blessing",
-                description="Used as an open-palmed gesture of blessing, assurance, or calm restraint.",
-            ),
-            Interpretation(
-                label="Stop",
-                description="Can be read as a firm stopping gesture or a sign of setting a boundary.",
-            ),
-            Interpretation(
-                label="Mirror",
-                video_path=ASSETS_DIR / "pathaka_mirror.MOV",
-            ),
-        ),
-    ),
-    MudraEntry(
         name="Pataka",
         sketch_path=ASSETS_DIR / "pathaka_sketch.png",
         interpretations=(
@@ -155,6 +101,66 @@ MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
             Interpretation(
                 label="Mirror",
                 video_path=ASSETS_DIR / "pathaka_mirror.MOV",
+            ),
+            Interpretation(
+                label="River",
+                description="Suggests the flow of water, continuity, or a scene shaped by movement.",
+            ),
+            Interpretation(
+                label="Wind",
+                description="Can indicate moving air, softness, or a passing natural force.",
+            ),
+            Interpretation(
+                label="Night",
+                description="Used to evoke darkness, stillness, or the arrival of evening.",
+            ),
+            Interpretation(
+                label="Forest",
+                description="Points to trees, growth, or the feeling of a wooded landscape.",
+            ),
+            Interpretation(
+                label="Gate",
+                description="Can imply an entrance, threshold, or ceremonial passage.",
+            ),
+            Interpretation(
+                label="Shield",
+                description="Reads as protection, guarding, or holding a defensive posture.",
+            ),
+            Interpretation(
+                label="Cloud",
+                description="Suggests drifting sky forms, softness, or a suspended atmosphere.",
+            ),
+            Interpretation(
+                label="Prayer",
+                description="Can support a devotional meaning when paired with other expressive actions.",
+            ),
+            Interpretation(
+                label="Oath",
+                description="May be used to signal a vow, promise, or solemn declaration.",
+            ),
+            Interpretation(
+                label="Greeting",
+                description="Works as a welcoming or acknowledging gesture in performance contexts.",
+            ),
+            Interpretation(
+                label="Beacon",
+                description="Suggests signaling, visibility, or drawing attention outward.",
+            ),
+            Interpretation(
+                label="Lotus",
+                description="Can be interpreted as a floral reference when staged with complementary gestures.",
+            ),
+            Interpretation(
+                label="Banner",
+                description="Evokes something lifted, displayed, or ceremonially presented.",
+            ),
+            Interpretation(
+                label="Promise",
+                description="Supports meanings tied to resolve, intent, or spoken commitment.",
+            ),
+            Interpretation(
+                label="Horizon",
+                description="Can frame distance, openness, or a far-reaching scene.",
             ),
         ),
     ),
@@ -419,8 +425,7 @@ class InterpretationSidePanel(QFrame):
     ) -> None:
         super().__init__(parent)
         self.setObjectName("interpretationPanel")
-        self.setMinimumWidth(360)
-        self.setMaximumWidth(420)
+        self.setMinimumWidth(420)
         self.setStyleSheet(
             """
             QFrame#interpretationPanel {
@@ -610,6 +615,10 @@ class InterpretationSidePanel(QFrame):
         if self.player is not None:
             self.player.stop()
 
+    def set_target_width(self, width: int) -> None:
+        clamped_width = max(self.minimumWidth(), width)
+        self.setFixedWidth(clamped_width)
+
 
 class InterpretationStage(QFrame):
     def __init__(
@@ -623,7 +632,6 @@ class InterpretationStage(QFrame):
         self.on_interpretation_click = on_interpretation_click
         self.source_pixmap = QPixmap(str(entry.sketch_path))
         self.buttons: list[QPushButton] = []
-        self.cloud_points: list[tuple[float, float]] = []
 
         self.setMinimumHeight(420)
         self.setStyleSheet(
@@ -686,11 +694,6 @@ class InterpretationStage(QFrame):
             1.02,
         )
 
-        self.cloud_points = self._build_cloud_points(
-            len(self.buttons),
-            hand_box=hand_box,
-        )
-
         hand_center_x, hand_center_y, hand_width_ratio, hand_height_ratio = hand_box
         hand_width = int(cluster_width * hand_width_ratio)
         hand_height = int(cluster_height * hand_height_ratio)
@@ -706,58 +709,108 @@ class InterpretationStage(QFrame):
             )
             self.sketch_label.setPixmap(scaled)
 
-        for button, (anchor_x, anchor_y) in zip(self.buttons, self.cloud_points):
-            button.adjustSize()
-            x = int(cluster_left + cluster_width * anchor_x - button.width() / 2)
-            y = int(cluster_top + cluster_height * anchor_y - button.height() / 2)
-            x = max(cluster_left + 16, min(cluster_left +
-                    cluster_width - button.width() - 16, x))
-            y = max(cluster_top + 16, min(cluster_top +
-                    cluster_height - button.height() - 16, y))
-            button.move(x, y)
+        self._arrange_buttons(
+            cluster_left=cluster_left,
+            cluster_top=cluster_top,
+            cluster_width=cluster_width,
+            cluster_height=cluster_height,
+            hand_rect=(hand_x, hand_y, hand_width, hand_height),
+        )
 
-    def _build_cloud_points(
+    def _arrange_buttons(
         self,
-        count: int,
-        hand_box: tuple[float, float, float, float],
-    ) -> list[tuple[float, float]]:
-        if count <= 0:
-            return []
+        cluster_left: int,
+        cluster_top: int,
+        cluster_width: int,
+        cluster_height: int,
+        hand_rect: tuple[int, int, int, int],
+    ) -> None:
+        if not self.buttons:
+            return
 
-        rng = random.Random(f"{self.entry.name}:{count}")
-        points: list[tuple[float, float]] = []
-        attempts = 0
-        hand_center_x, hand_center_y, hand_width, hand_height = hand_box
-        exclusion_left = hand_center_x - hand_width * 0.55
-        exclusion_right = hand_center_x + hand_width * 0.55
-        exclusion_top = hand_center_y - hand_height * 0.55
-        exclusion_bottom = hand_center_y + hand_height * 0.55
+        center_x = cluster_left + cluster_width / 2
+        center_y = cluster_top + cluster_height * 0.50
+        hand_x, hand_y, hand_width, hand_height = hand_rect
+        hand_left = hand_x + hand_width * 0.18
+        hand_top = hand_y + hand_height * 0.08
+        hand_right = hand_x + hand_width * 0.82
+        hand_bottom = hand_y + hand_height * 0.72
+        margin = 10
 
-        while len(points) < count and attempts < 400:
-            attempts += 1
-            angle = rng.uniform(0.0, 2.0 * math.pi)
-            radius_x = rng.uniform(0.22, 0.33)
-            radius_y = rng.uniform(0.18, 0.28)
-            x = 0.5 + radius_x * math.cos(angle)
-            y = 0.5 + radius_y * math.sin(angle)
+        occupied: list[tuple[int, int, int, int]] = []
+        rng = random.Random(f"{self.entry.name}:{len(self.buttons)}")
+        base_angle = rng.uniform(0.0, 2.0 * math.pi)
+        angle_step = (2.0 * math.pi) / len(self.buttons)
 
-            if not (0.14 <= x <= 0.86 and 0.12 <= y <= 0.88):
-                continue
+        for index, button in enumerate(self.buttons):
+            button.adjustSize()
+            placed = False
+            preferred_angle = base_angle + index * angle_step
 
-            if exclusion_left <= x <= exclusion_right and exclusion_top <= y <= exclusion_bottom:
-                continue
+            for ring in range(7):
+                radius_x = cluster_width * (0.26 + ring * 0.045)
+                radius_y = cluster_height * (0.22 + ring * 0.035)
+                for offset_index in range(16):
+                    offset = ((offset_index + 1) // 2) * 0.18
+                    if offset_index % 2 == 1:
+                        offset *= -1
+                    angle = preferred_angle + offset + rng.uniform(-0.035, 0.035)
+                    x = int(center_x + radius_x * math.cos(angle) - button.width() / 2)
+                    y = int(center_y + radius_y * math.sin(angle) - button.height() / 2)
+                    rect = (x, y, button.width(), button.height())
+                    if not self._rect_within_cluster(
+                        rect, cluster_left, cluster_top, cluster_width, cluster_height, margin
+                    ):
+                        continue
+                    if self._rect_intersects(rect, (int(hand_left), int(hand_top), int(hand_right - hand_left), int(hand_bottom - hand_top)), padding=12):
+                        continue
+                    if any(self._rect_intersects(rect, other, padding=8) for other in occupied):
+                        continue
 
-            if any((x - px) ** 2 + (y - py) ** 2 < 0.016 for px, py in points):
-                continue
+                    button.move(x, y)
+                    occupied.append(rect)
+                    placed = True
+                    break
+                if placed:
+                    break
 
-            points.append((x, y))
+            if not placed:
+                x = cluster_left + margin
+                y = cluster_top + margin + index * (button.height() + 6)
+                button.move(x, y)
+                occupied.append((x, y, button.width(), button.height()))
 
-        while len(points) < count:
-            index = len(points)
-            angle = (2.0 * math.pi * index) / count
-            points.append((0.5 + 0.31 * math.cos(angle), 0.5 + 0.26 * math.sin(angle)))
+    @staticmethod
+    def _rect_within_cluster(
+        rect: tuple[int, int, int, int],
+        cluster_left: int,
+        cluster_top: int,
+        cluster_width: int,
+        cluster_height: int,
+        margin: int,
+    ) -> bool:
+        x, y, width, height = rect
+        return (
+            x >= cluster_left + margin
+            and y >= cluster_top + margin
+            and x + width <= cluster_left + cluster_width - margin
+            and y + height <= cluster_top + cluster_height - margin
+        )
 
-        return points
+    @staticmethod
+    def _rect_intersects(
+        rect_a: tuple[int, int, int, int],
+        rect_b: tuple[int, int, int, int],
+        padding: int = 0,
+    ) -> bool:
+        ax, ay, aw, ah = rect_a
+        bx, by, bw, bh = rect_b
+        return not (
+            ax + aw + padding <= bx
+            or bx + bw + padding <= ax
+            or ay + ah + padding <= by
+            or by + bh + padding <= ay
+        )
 
 
 class MudraCard(QFrame):
@@ -842,6 +895,8 @@ class MudraArchiveTab(QWidget):
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(QFrame.NoFrame)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         content_row.addWidget(self.scroll_area, stretch=1)
 
         content = QWidget()
@@ -857,6 +912,7 @@ class MudraArchiveTab(QWidget):
 
         self.grid.setRowStretch(len(entries), 1)
         self.scroll_area.setWidget(content)
+        self._update_side_panel_width()
 
     def collapse_side_panel(self) -> None:
         self.panel_open = False
@@ -868,10 +924,25 @@ class MudraArchiveTab(QWidget):
         mudra: MudraEntry,
         interpretation: Interpretation,
     ) -> None:
+        self._update_side_panel_width()
         self.side_panel.set_interpretation(mudra, interpretation)
         if not self.panel_open:
             self.panel_open = True
             self.side_panel.show()
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self._update_side_panel_width()
+
+    def _update_side_panel_width(self) -> None:
+        if self.windowHandle() is not None and self.windowHandle().screen() is not None:
+            screen_width = self.windowHandle().screen().availableGeometry().width()
+        elif self.window() is not None:
+            screen_width = self.window().width()
+        else:
+            screen_width = self.width()
+
+        self.side_panel.set_target_width(int(screen_width * 0.4))
 
     def set_hold_label(self, label: str | None) -> None:
         if not label:
