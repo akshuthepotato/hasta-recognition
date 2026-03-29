@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QStackedLayout,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -437,6 +438,9 @@ class InterpretationPopup(QDialog):
 
         self.player: QMediaPlayer | None = None
         self.video_widget: QVideoWidget | None = None
+        self.poster_label: ClickableVideoLabel | None = None
+        self.poster_pixmap: QPixmap | None = None
+        self.media_layout: QStackedLayout | None = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
@@ -447,19 +451,118 @@ class InterpretationPopup(QDialog):
         layout.addWidget(title_label)
 
         if video_path is not None and video_path.exists():
+            self.poster_pixmap = self._load_video_preview(video_path)
+            media_container = QWidget(self)
+            self.media_layout = QStackedLayout(media_container)
+            self.media_layout.setContentsMargins(0, 0, 0, 0)
+
             self.video_widget = QVideoWidget(self)
             self.video_widget.setMinimumSize(520, 360)
-            layout.addWidget(self.video_widget, stretch=1)
+            self.media_layout.addWidget(self.video_widget)
+
+            self.poster_label = ClickableVideoLabel()
+            self.poster_label.setAlignment(Qt.AlignCenter)
+            self.poster_label.setMinimumSize(520, 360)
+            self.poster_label.setStyleSheet(
+                "background: #000; border-radius: 8px;"
+            )
+            self.poster_label.clicked.connect(self.restart_video)
+            self.media_layout.addWidget(self.poster_label)
+            self.media_layout.setCurrentWidget(self.video_widget)
+
+            if self.poster_pixmap is not None:
+                self._update_poster_pixmap()
+
+            layout.addWidget(media_container, stretch=1)
 
             self.player = QMediaPlayer(self)
             self.player.setVideoOutput(self.video_widget)
             self.player.setSource(QUrl.fromLocalFile(str(video_path.resolve())))
+            self.player.mediaStatusChanged.connect(self._handle_media_status_changed)
             self.player.play()
         else:
             body_label = QLabel(description or "No details available.")
             body_label.setWordWrap(True)
             body_label.setStyleSheet("font-size: 14px; line-height: 1.4;")
             layout.addWidget(body_label)
+
+    def _load_video_preview(self, video_path: Path) -> QPixmap | None:
+        capture = cv2.VideoCapture(str(video_path))
+        if not capture.isOpened():
+            return None
+
+        preview_frame = None
+        success, first_frame = capture.read()
+        if success:
+            preview_frame = first_frame
+
+        frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        if frame_count > 0:
+            capture.set(cv2.CAP_PROP_POS_FRAMES, max(frame_count - 1, 0))
+            success, last_frame = capture.read()
+            if success:
+                preview_frame = last_frame
+
+        capture.release()
+        if preview_frame is None:
+            return None
+
+        rgb = cv2.cvtColor(preview_frame, cv2.COLOR_BGR2RGB)
+        height, width, channels = rgb.shape
+        image = QImage(
+            rgb.data,
+            width,
+            height,
+            channels * width,
+            QImage.Format_RGB888,
+        ).copy()
+        return QPixmap.fromImage(image)
+
+    def _update_poster_pixmap(self) -> None:
+        if self.poster_label is None or self.poster_pixmap is None:
+            return
+
+        self.poster_label.setPixmap(
+            self.poster_pixmap.scaled(
+                self.poster_label.size(),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation,
+            )
+        )
+
+    def _show_poster(self) -> None:
+        if (
+            self.poster_label is None
+            or self.poster_pixmap is None
+            or self.media_layout is None
+        ):
+            return
+
+        if self.video_widget is not None:
+            self.poster_label.resize(self.video_widget.size())
+
+        self._update_poster_pixmap()
+        self.media_layout.setCurrentWidget(self.poster_label)
+
+    def restart_video(self) -> None:
+        if (
+            self.player is None
+            or self.video_widget is None
+            or self.media_layout is None
+        ):
+            return
+
+        self.media_layout.setCurrentWidget(self.video_widget)
+        self.player.setPosition(0)
+        self.player.play()
+
+    def _handle_media_status_changed(self, status: QMediaPlayer.MediaStatus) -> None:
+        if status == QMediaPlayer.EndOfMedia:
+            self._show_poster()
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self._update_poster_pixmap()
 
     def closeEvent(self, event) -> None:  # noqa: N802
         if self.player is not None:
@@ -555,8 +658,24 @@ class MudraCard(QFrame):
             video_path=interpretation.video_path,
             parent=self,
         )
-        self.popup.move(self.mapToGlobal(self.rect().center()) -
-                        self.popup.rect().center())
+        window = self.window()
+        if window is not None:
+            popup_width = max(
+                self.popup.minimumWidth(),
+                int(window.width() * 0.9),
+            )
+            popup_height = max(
+                self.popup.minimumHeight(),
+                int(window.height() * 0.9),
+            )
+            self.popup.resize(popup_width, popup_height)
+            self.popup.move(
+                window.mapToGlobal(window.rect().center()) - self.popup.rect().center()
+            )
+        else:
+            self.popup.move(
+                self.mapToGlobal(self.rect().center()) - self.popup.rect().center()
+            )
         self.popup.show()
 
 
