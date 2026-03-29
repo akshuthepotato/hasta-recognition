@@ -9,8 +9,8 @@ from pathlib import Path
 
 import cv2
 import mediapipe as mp
-from PySide6.QtCore import QTimer, Qt, QUrl
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtCore import QTimer, Qt, QUrl, Signal
+from PySide6.QtGui import QImage, QKeyEvent, QPixmap
 from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
@@ -59,6 +59,28 @@ class MudraEntry:
     name: str
     sketch_path: Path
     interpretations: tuple[Interpretation, ...]
+
+
+class ClickableVideoLabel(QLabel):
+    clicked = Signal()
+
+    def mousePressEvent(self, event) -> None:  # noqa: N802
+        if event.button() == Qt.LeftButton and self._pixmap_rect().contains(
+            event.position().toPoint()
+        ):
+            self.clicked.emit()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def _pixmap_rect(self):
+        pixmap = self.pixmap()
+        if pixmap is None:
+            return self.rect()
+
+        x = (self.width() - pixmap.width()) // 2
+        y = (self.height() - pixmap.height()) // 2
+        return pixmap.rect().translated(x, y)
 
 
 MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
@@ -166,17 +188,15 @@ class WebcamViewerTab(QWidget):
         )
         self.hold_sm = HoldStateMachine(hold_duration)
 
-        self.video_label = QLabel("Waiting for webcam...")
+        self.video_label = ClickableVideoLabel("Waiting for webcam...")
         self.video_label.setAlignment(Qt.AlignCenter)
         self.video_label.setMinimumSize(640, 480)
         self.video_label.setStyleSheet("background: #111; color: #ddd;")
-
-        self.pause_button = QPushButton("Pause")
-        self.pause_button.clicked.connect(self.toggle_pause)
+        self.video_label.setCursor(Qt.PointingHandCursor)
+        self.video_label.clicked.connect(self.toggle_pause)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.video_label, stretch=1)
-        layout.addWidget(self.pause_button)
 
         self.landmarker = HandLandmarker.create_from_options(
             HandLandmarkerOptions(
@@ -215,7 +235,6 @@ class WebcamViewerTab(QWidget):
 
     def set_paused(self, paused: bool) -> None:
         self.paused = paused
-        self.pause_button.setText("Resume" if self.paused else "Pause")
         if not paused:
             self.hold_sm.reset()
             self.latest_result = None
@@ -232,7 +251,7 @@ class WebcamViewerTab(QWidget):
 
     def _pause_from_hold(self, detected_label) -> None:
         if not self.paused:
-            self.pause_button.click()
+            self.toggle_pause()
         if self.on_hold_pause is not None:
             self.on_hold_pause(detected_label)
 
@@ -312,8 +331,56 @@ class WebcamViewerTab(QWidget):
             )
             y += 30
 
+    def draw_paused_overlay(self, frame) -> None:
+        cv2.putText(
+            frame,
+            "Paused",
+            (16, 90),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 255, 0),
+            2,
+        )
+
+        height, width = frame.shape[:2]
+        overlay = frame.copy()
+        cv2.circle(
+            overlay,
+            (width // 2, height // 2),
+            min(width, height) // 8,
+            (255, 255, 255),
+            -1,
+        )
+        frame[:] = cv2.addWeighted(overlay, 0.25, frame, 0.75, 0)
+        bar_height = min(width, height) // 10
+        bar_width = max(10, bar_height // 3)
+        gap = bar_width
+        center_x = width // 2
+        center_y = height // 2
+        top = center_y - bar_height // 2
+        bottom = center_y + bar_height // 2
+        cv2.rectangle(
+            frame,
+            (center_x - gap // 2 - bar_width, top),
+            (center_x - gap // 2, bottom),
+            (40, 40, 40),
+            -1,
+        )
+        cv2.rectangle(
+            frame,
+            (center_x + gap // 2, top),
+            (center_x + gap // 2 + bar_width, bottom),
+            (40, 40, 40),
+            -1,
+        )
+
     def show_frame(self, frame) -> None:
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        display_frame = frame
+        if self.paused:
+            display_frame = frame.copy()
+            self.draw_paused_overlay(display_frame)
+
+        rgb = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
         height, width, channels = rgb.shape
         bytes_per_line = channels * width
         image = QImage(
@@ -583,6 +650,17 @@ class AppWindow(QMainWindow):
     def handle_tab_changed(self, index: int) -> None:
         if self.tabs.widget(index) is not self.viewer_tab:
             self.viewer_tab.set_paused(True)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
+        if (
+            event.key() == Qt.Key_Space
+            and self.tabs.currentWidget() is self.viewer_tab
+            and not event.isAutoRepeat()
+        ):
+            self.viewer_tab.toggle_pause()
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
 
 def main() -> int:
