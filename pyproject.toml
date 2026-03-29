@@ -3,5 +3,17 @@ name = "hasta-detection"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.9"
-dependencies = []
+requires-python = ">3.9,<3.12"
+dependencies = [
+    "mediapipe>=0.10.33",
+    "scikit-learn>=1.6.1",
+    "xgboost>=2.1.4",
+]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+]
+
+[tool.uv]
+required-environments = ["sys_platform == 'darwin' and platform_machine == 'arm64'"]
