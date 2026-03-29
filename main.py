@@ -51,6 +51,85 @@ class FrameResult:
     prediction: Prediction | None
 
 
+class HoldStateMachine:
+    def __init__(
+        self,
+        hold_duration: float,
+        max_gap: float = 0.6,       # tolerate missing label for this long
+        max_mismatch: float = 0.6,  # tolerate wrong label for this long
+    ):
+        self.hold_duration = hold_duration
+        self.max_gap = max_gap
+        self.max_mismatch = max_mismatch
+
+        self.hold_label = None
+        self.hold_start_time = None
+        self.paused = False
+
+        # New tracking
+        self.last_seen_time = None
+        self.mismatch_start_time = None
+
+    def reset(self):
+        self.hold_label = None
+        self.hold_start_time = None
+        self.paused = False
+        self.last_seen_time = None
+        self.mismatch_start_time = None
+
+    def update(self, label: str | None):
+        now = time.perf_counter()
+        progress = 0.0
+
+        valid = label and label != "uncertain"
+
+        # --- CASE 1: no active hold yet ---
+        if self.hold_label is None:
+            if valid:
+                self.hold_label = label
+                self.hold_start_time = now
+                self.last_seen_time = now
+            return 0.0, False
+
+        # --- CASE 2: we are tracking a label ---
+        if valid and label == self.hold_label:
+            # Correct label → continue
+            self.last_seen_time = now
+            self.mismatch_start_time = None
+
+        elif valid and label != self.hold_label:
+            # Wrong label → start mismatch timer
+            if self.mismatch_start_time is None:
+                self.mismatch_start_time = now
+
+            if now - self.mismatch_start_time > self.max_mismatch:
+                # Too long mismatch → reset to new label
+                self.hold_label = label
+                self.hold_start_time = now
+                self.last_seen_time = now
+                self.mismatch_start_time = None
+                self.paused = False
+                return 0.0, False
+
+        else:
+            # Missing / uncertain label
+            if self.last_seen_time is not None:
+                if now - self.last_seen_time > self.max_gap:
+                    # Too long gap → reset
+                    self.reset()
+                    return 0.0, False
+
+        # --- Compute progress ---
+        if self.hold_start_time is not None:
+            elapsed = now - self.hold_start_time
+            progress = min(elapsed / self.hold_duration, 1.0)
+
+            if elapsed >= self.hold_duration:
+                self.paused = True
+
+        return progress, self.paused
+
+
 class LiveMudraClassifier:
     def __init__(
         self,
@@ -78,10 +157,6 @@ class LiveMudraClassifier:
             landmarks_from_mediapipe(result.hand_landmarks[hand_index]),
             handedness,
         )
-        if len(features) != self.expected_feature_count:
-            raise ValueError(
-                f"Expected {self.expected_feature_count} features, got {len(features)}"
-            )
 
         probabilities = self.model.predict_proba(
             np.asarray([features], dtype=np.float32)
@@ -110,6 +185,179 @@ class LiveMudraClassifier:
             return categories[0].score if categories else 0.0
 
         return max(range(len(result.hand_landmarks)), key=score_for)
+
+
+# ---------------- NEW: PROGRESS CIRCLE ---------------- #
+
+def draw_progress_circle(frame, result, progress, paused):
+    if not result.hand_landmarks:
+        return
+
+    height, width = frame.shape[:2]
+
+    # Border inset from edges
+    margin = 10
+    thickness = 6
+
+    # Rectangle corners
+    top_left = (margin, margin)
+    top_right = (width - margin, margin)
+    bottom_right = (width - margin, height - margin)
+    bottom_left = (margin, height - margin)
+
+    color_active = (0, 255, 255)
+    color_paused = (0, 255, 0)
+
+    color = color_paused if paused else color_active
+
+    # Total perimeter
+    top_len = top_right[0] - top_left[0]
+    right_len = bottom_right[1] - top_right[1]
+    bottom_len = bottom_right[0] - bottom_left[0]
+    left_len = bottom_left[1] - top_left[1]
+
+    perimeter = top_len + right_len + bottom_len + left_len
+
+    # Length to draw
+    draw_len = perimeter if paused else int(progress * perimeter)
+
+    def draw_segment(p1, p2, length_remaining):
+        segment_len = int(((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2) ** 0.5)
+
+        if length_remaining <= 0:
+            return length_remaining
+
+        if length_remaining >= segment_len:
+            cv2.line(frame, p1, p2, color, thickness)
+            return length_remaining - segment_len
+        else:
+            # Partial segment
+            ratio = length_remaining / segment_len
+            x = int(p1[0] + (p2[0] - p1[0]) * ratio)
+            y = int(p1[1] + (p2[1] - p1[1]) * ratio)
+            cv2.line(frame, p1, (x, y), color, thickness)
+            return 0
+
+    remaining = draw_len
+
+    # Draw in clockwise order
+    remaining = draw_segment(top_left, top_right, remaining)
+    remaining = draw_segment(top_right, bottom_right, remaining)
+    remaining = draw_segment(bottom_right, bottom_left, remaining)
+    remaining = draw_segment(bottom_left, top_left, remaining)
+
+
+# ---------------- DRAW ---------------- #
+
+def draw_hand_landmarks(frame: np.ndarray, result: HandLandmarkerResult) -> None:
+    height, width = frame.shape[:2]
+    for hand_landmarks in result.hand_landmarks:
+        points = []
+        for landmark in hand_landmarks:
+            x = int(landmark.x * width)
+            y = int(landmark.y * height)
+            points.append((x, y))
+
+        for start_idx, end_idx in HAND_CONNECTIONS:
+            cv2.line(frame, points[start_idx], points[end_idx], (255, 200, 0), 2)
+
+        for point in points:
+            cv2.circle(frame, point, 4, (0, 140, 255), -1)
+
+
+def draw_overlay(frame, prediction, fps):
+    lines = [f"FPS: {fps:.1f}"]
+
+    if prediction is None:
+        lines.append("Mudra: no hand")
+    else:
+        lines.append(f"Mudra: {prediction.label} ({prediction.confidence:.2f})")
+
+    y = 30
+    for line in lines:
+        cv2.putText(frame, line, (16, y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        y += 30
+
+
+# ---------------- MAIN ---------------- #
+
+def run(args):
+    classifier = LiveMudraClassifier(
+        args.classifier_path,
+        args.labels_path,
+        args.classification_threshold,
+    )
+
+    result_queue = queue.Queue(maxsize=1)
+    capture = cv2.VideoCapture(args.camera_id)
+
+    HOLD_DURATION = 5
+    hold_sm = HoldStateMachine(HOLD_DURATION)
+
+    latest_result = None
+    prev_time = time.perf_counter()
+
+    def callback(result, output_image, timestamp_ms):
+        prediction = classifier.predict(result)
+        result_queue.put(FrameResult(timestamp_ms, result, prediction))
+
+    options = HandLandmarkerOptions(
+        base_options=BaseOptions(model_asset_path=str(args.model_path)),
+        running_mode=VisionRunningMode.LIVE_STREAM,
+        result_callback=callback,
+    )
+
+    with HandLandmarker.create_from_options(options) as landmarker:
+        while True:
+            ret, frame = capture.read()
+            if not ret:
+                break
+
+            frame = cv2.flip(frame, 1)
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+            landmarker.detect_async(mp_image, int(time.time() * 1000))
+
+            while not result_queue.empty():
+                latest_result = result_queue.get()
+
+            now = time.perf_counter()
+            fps = 1 / (now - prev_time)
+            prev_time = now
+
+            progress = 0.0
+            paused = False
+
+            if latest_result and latest_result.prediction:
+                label = latest_result.prediction.label
+
+                progress, paused = hold_sm.update(label)
+
+                draw_hand_landmarks(frame, latest_result.result)
+                draw_progress_circle(frame, latest_result.result, progress, paused)
+                draw_overlay(frame, latest_result.prediction, fps)
+            else:
+                hold_sm.reset()
+                draw_overlay(frame, None, fps)
+
+            cv2.imshow("Hasta Detection", frame)
+
+            if paused:
+                cv2.waitKey(0)
+
+            key = cv2.waitKey(1)
+            if key in (27, ord('q')):
+                print("quitting")
+                break
+        print("closing landmarker")
+
+    print("releasing")
+    capture.release()
+    print("released")
+    cv2.destroyAllWindows()
+    print("destroying")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -171,157 +419,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Minimum classifier probability before a mudra label is shown.",
     )
     return parser
-
-
-def draw_hand_landmarks(frame: np.ndarray, result: HandLandmarkerResult) -> None:
-    height, width = frame.shape[:2]
-    for hand_landmarks in result.hand_landmarks:
-        points: list[tuple[int, int]] = []
-        for landmark in hand_landmarks:
-            x = min(max(int(landmark.x * width), 0), width - 1)
-            y = min(max(int(landmark.y * height), 0), height - 1)
-            points.append((x, y))
-
-        for start_idx, end_idx in HAND_CONNECTIONS:
-            cv2.line(frame, points[start_idx], points[end_idx], (255, 200, 0), 2)
-
-        for point in points:
-            cv2.circle(frame, point, 4, (0, 140, 255), -1)
-
-
-def draw_overlay(
-    frame: np.ndarray,
-    prediction: Prediction | None,
-    fps: float,
-) -> None:
-    lines = [f"FPS: {fps:.1f}"]
-    if prediction is None:
-        lines.append("Mudra: no hand detected")
-    else:
-        lines.append(f"Mudra: {prediction.label} ({prediction.confidence:.2f})")
-        if prediction.handedness:
-            lines.append(
-                f"Hand: {prediction.handedness} ({prediction.handedness_score:.2f})"
-            )
-
-    y = 30
-    for line in lines:
-        cv2.putText(
-            frame,
-            line,
-            (16, y),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.75,
-            (0, 255, 0),
-            2,
-            cv2.LINE_AA,
-        )
-        y += 30
-
-
-def build_landmarker(
-    args: argparse.Namespace,
-    result_queue: queue.Queue[FrameResult],
-    classifier: LiveMudraClassifier,
-) -> HandLandmarker:
-    def print_result(
-        result: HandLandmarkerResult,
-        output_image: mp.Image,
-        timestamp_ms: int,
-    ) -> None:
-        del output_image
-        prediction = classifier.predict(result)
-        frame_result = FrameResult(
-            timestamp_ms=timestamp_ms,
-            result=result,
-            prediction=prediction,
-        )
-        try:
-            result_queue.put_nowait(frame_result)
-        except queue.Full:
-            try:
-                result_queue.get_nowait()
-            except queue.Empty:
-                pass
-            result_queue.put_nowait(frame_result)
-
-    options = HandLandmarkerOptions(
-        base_options=BaseOptions(model_asset_path=str(args.model_path.resolve())),
-        running_mode=VisionRunningMode.LIVE_STREAM,
-        num_hands=args.num_hands,
-        min_hand_detection_confidence=args.min_hand_detection_confidence,
-        min_hand_presence_confidence=args.min_hand_presence_confidence,
-        min_tracking_confidence=args.min_tracking_confidence,
-        result_callback=print_result,
-    )
-    return HandLandmarker.create_from_options(options)
-
-
-def validate_paths(*paths: Path) -> None:
-    for path in paths:
-        if not path.exists():
-            raise FileNotFoundError(f"Required file not found: {path.resolve()}")
-
-
-def run(args: argparse.Namespace) -> int:
-    validate_paths(args.model_path, args.classifier_path, args.labels_path)
-
-    classifier = LiveMudraClassifier(
-        classifier_path=args.classifier_path.resolve(),
-        labels_path=args.labels_path.resolve(),
-        confidence_threshold=args.classification_threshold,
-    )
-    result_queue: queue.Queue[FrameResult] = queue.Queue(maxsize=1)
-
-    capture = cv2.VideoCapture(args.camera_id)
-    if not capture.isOpened():
-        raise RuntimeError(
-            f"Unable to open webcam {args.camera_id}. Check camera permissions and device index."
-        )
-
-    latest_result: FrameResult | None = None
-    previous_frame_time = time.perf_counter()
-
-    with build_landmarker(args, result_queue, classifier) as landmarker:
-        try:
-            while True:
-                ok, frame = capture.read()
-                if not ok:
-                    raise RuntimeError("Failed to read a frame from the webcam.")
-
-                frame = cv2.flip(frame, 1)
-                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-                timestamp_ms = int(time.time() * 1000)
-                landmarker.detect_async(mp_image, timestamp_ms)
-
-                while True:
-                    try:
-                        candidate = result_queue.get_nowait()
-                    except queue.Empty:
-                        break
-                    if latest_result is None or candidate.timestamp_ms >= latest_result.timestamp_ms:
-                        latest_result = candidate
-
-                now = time.perf_counter()
-                fps = 1.0 / max(now - previous_frame_time, 1e-6)
-                previous_frame_time = now
-
-                if latest_result is not None:
-                    draw_hand_landmarks(frame, latest_result.result)
-                    draw_overlay(frame, latest_result.prediction, fps)
-                else:
-                    draw_overlay(frame, None, fps)
-
-                cv2.imshow("Hasta Detection", frame)
-                key = cv2.waitKey(1) & 0xFF
-                if key in (27, ord("q")):
-                    break
-        finally:
-            capture.release()
-            cv2.destroyAllWindows()
-
-    return 0
 
 
 def main() -> int:
