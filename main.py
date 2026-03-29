@@ -89,7 +89,7 @@ class HoldStateMachine:
                 self.hold_label = label
                 self.hold_start_time = now
                 self.last_seen_time = now
-            return 0.0, False
+            return 0.0, False, None
 
         # --- CASE 2: we are tracking a label ---
         if valid and label == self.hold_label:
@@ -109,7 +109,7 @@ class HoldStateMachine:
                 self.last_seen_time = now
                 self.mismatch_start_time = None
                 self.paused = False
-                return 0.0, False
+                return 0.0, False, None
 
         else:
             # Missing / uncertain label
@@ -117,7 +117,7 @@ class HoldStateMachine:
                 if now - self.last_seen_time > self.max_gap:
                     # Too long gap → reset
                     self.reset()
-                    return 0.0, False
+                    return 0.0, False, None
 
         # --- Compute progress ---
         if self.hold_start_time is not None:
@@ -127,7 +127,7 @@ class HoldStateMachine:
             if elapsed >= self.hold_duration:
                 self.paused = True
 
-        return progress, self.paused
+        return progress, self.paused, self.hold_label
 
 
 class LiveMudraClassifier:
