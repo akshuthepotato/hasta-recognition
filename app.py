@@ -17,9 +17,9 @@ from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
     QApplication,
-    QDialog,
     QFrame,
     QGridLayout,
+    QHBoxLayout,
     QLabel,
     QMainWindow,
     QMessageBox,
@@ -413,20 +413,17 @@ class WebcamViewerTab(QWidget):
         super().closeEvent(event)
 
 
-class InterpretationPopup(QDialog):
+class InterpretationSidePanel(QFrame):
     def __init__(
-        self,
-        title: str,
-        description: str | None = None,
-        video_path: Path | None = None,
-        parent: QWidget | None = None,
+        self, parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
-        self.setMinimumSize(420, 320)
+        self.setObjectName("interpretationPanel")
+        self.setMinimumWidth(360)
+        self.setMaximumWidth(420)
         self.setStyleSheet(
             """
-            QDialog {
+            QFrame#interpretationPanel {
                 background: #101010;
                 border: 1px solid #353535;
                 border-radius: 12px;
@@ -434,58 +431,100 @@ class InterpretationPopup(QDialog):
             QLabel {
                 color: #f2f2f2;
             }
+            QPushButton {
+                background: #2d2116;
+                color: #fffaf0;
+                border: none;
+                border-radius: 10px;
+                padding: 8px 12px;
+            }
+            QPushButton:hover {
+                background: #473424;
+            }
             """
         )
 
+        self.current_title = "Select an interpretation"
         self.player: QMediaPlayer | None = None
         self.video_widget: QVideoWidget | None = None
         self.poster_label: ClickableVideoLabel | None = None
         self.poster_pixmap: QPixmap | None = None
         self.media_layout: QStackedLayout | None = None
+        self.current_video_path: Path | None = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
 
-        title_label = QLabel(title)
-        title_label.setStyleSheet("font-size: 18px; font-weight: 700;")
-        layout.addWidget(title_label)
+        header = QHBoxLayout()
+        header.setContentsMargins(0, 0, 0, 0)
+        header.setSpacing(8)
+        layout.addLayout(header)
+
+        self.title_label = QLabel(self.current_title)
+        self.title_label.setStyleSheet("font-size: 18px; font-weight: 700;")
+        self.title_label.setWordWrap(True)
+        header.addWidget(self.title_label, stretch=1)
+
+        self.collapse_button = QPushButton("Collapse")
+        header.addWidget(self.collapse_button)
+
+        media_container = QWidget(self)
+        self.media_layout = QStackedLayout(media_container)
+        self.media_layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(media_container, stretch=1)
+
+        self.video_widget = QVideoWidget(self)
+        self.video_widget.setMinimumSize(320, 220)
+        self.media_layout.addWidget(self.video_widget)
+
+        self.poster_label = ClickableVideoLabel()
+        self.poster_label.setAlignment(Qt.AlignCenter)
+        self.poster_label.setMinimumSize(320, 220)
+        self.poster_label.setStyleSheet("background: #000; border-radius: 8px;")
+        self.poster_label.clicked.connect(self.restart_video)
+        self.media_layout.addWidget(self.poster_label)
+
+        self.body_label = QLabel(
+            "Select a mudra interpretation to play the mirrored demonstration or read its note.")
+        self.body_label.setWordWrap(True)
+        self.body_label.setStyleSheet("font-size: 14px; line-height: 1.4;")
+        layout.addWidget(self.body_label)
+
+        self.player = QMediaPlayer(self)
+        self.player.setVideoOutput(self.video_widget)
+        self.player.mediaStatusChanged.connect(self._handle_media_status_changed)
+
+        self.media_layout.setCurrentWidget(self.poster_label)
+
+    def set_interpretation(
+        self,
+        mudra: MudraEntry,
+        interpretation: Interpretation,
+    ) -> None:
+        self.current_title = f"{mudra.name}: {interpretation.label}"
+        self.title_label.setText(self.current_title)
+        self.body_label.setText(interpretation.description or "No details available.")
+
+        video_path = interpretation.video_path
+        self.current_video_path = video_path
+        self.poster_pixmap = None
 
         if video_path is not None and video_path.exists():
             self.poster_pixmap = self._load_video_preview(video_path)
-            media_container = QWidget(self)
-            self.media_layout = QStackedLayout(media_container)
-            self.media_layout.setContentsMargins(0, 0, 0, 0)
-
-            self.video_widget = QVideoWidget(self)
-            self.video_widget.setMinimumSize(520, 360)
-            self.media_layout.addWidget(self.video_widget)
-
-            self.poster_label = ClickableVideoLabel()
-            self.poster_label.setAlignment(Qt.AlignCenter)
-            self.poster_label.setMinimumSize(520, 360)
-            self.poster_label.setStyleSheet(
-                "background: #000; border-radius: 8px;"
-            )
-            self.poster_label.clicked.connect(self.restart_video)
-            self.media_layout.addWidget(self.poster_label)
-            self.media_layout.setCurrentWidget(self.video_widget)
-
-            if self.poster_pixmap is not None:
-                self._update_poster_pixmap()
-
-            layout.addWidget(media_container, stretch=1)
-
-            self.player = QMediaPlayer(self)
-            self.player.setVideoOutput(self.video_widget)
+            self._update_poster_pixmap()
             self.player.setSource(QUrl.fromLocalFile(str(video_path.resolve())))
-            self.player.mediaStatusChanged.connect(self._handle_media_status_changed)
+            self.media_layout.setCurrentWidget(self.video_widget)
+            self.player.setPosition(0)
             self.player.play()
-        else:
-            body_label = QLabel(description or "No details available.")
-            body_label.setWordWrap(True)
-            body_label.setStyleSheet("font-size: 14px; line-height: 1.4;")
-            layout.addWidget(body_label)
+            return
+
+        self.player.stop()
+        self.player.setSource(QUrl())
+        if self.poster_label is not None:
+            self.poster_label.setText("No video available")
+            self.poster_label.setPixmap(QPixmap())
+        self.media_layout.setCurrentWidget(self.poster_label)
 
     def _load_video_preview(self, video_path: Path) -> QPixmap | None:
         capture = cv2.VideoCapture(str(video_path))
@@ -523,6 +562,7 @@ class InterpretationPopup(QDialog):
         if self.poster_label is None or self.poster_pixmap is None:
             return
 
+        self.poster_label.setText("")
         self.poster_label.setPixmap(
             self.poster_pixmap.scaled(
                 self.poster_label.size(),
@@ -550,6 +590,7 @@ class InterpretationPopup(QDialog):
             self.player is None
             or self.video_widget is None
             or self.media_layout is None
+            or self.current_video_path is None
         ):
             return
 
@@ -565,10 +606,9 @@ class InterpretationPopup(QDialog):
         super().resizeEvent(event)
         self._update_poster_pixmap()
 
-    def closeEvent(self, event) -> None:  # noqa: N802
+    def stop(self) -> None:
         if self.player is not None:
             self.player.stop()
-        super().closeEvent(event)
 
 
 class InterpretationStage(QFrame):
@@ -721,10 +761,15 @@ class InterpretationStage(QFrame):
 
 
 class MudraCard(QFrame):
-    def __init__(self, entry: MudraEntry, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        entry: MudraEntry,
+        on_interpretation_click: Callable[[MudraEntry, Interpretation], None],
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
         self.entry = entry
-        self.popup: InterpretationPopup | None = None
+        self.on_interpretation_click = on_interpretation_click
         self.setObjectName("mudraCard")
         self.setStyleSheet(
             """
@@ -754,39 +799,8 @@ class MudraCard(QFrame):
         instructions.setStyleSheet("font-size: 14px;")
         layout.addWidget(instructions)
 
-        stage = InterpretationStage(entry, self.show_interpretation, self)
+        stage = InterpretationStage(entry, self.on_interpretation_click, self)
         layout.addWidget(stage)
-
-    def show_interpretation(
-        self,
-        mudra: MudraEntry,
-        interpretation: Interpretation,
-    ) -> None:
-        self.popup = InterpretationPopup(
-            title=f"{mudra.name}: {interpretation.label}",
-            description=interpretation.description,
-            video_path=interpretation.video_path,
-            parent=self,
-        )
-        window = self.window()
-        if window is not None:
-            popup_width = max(
-                self.popup.minimumWidth(),
-                int(window.width() * 0.9),
-            )
-            popup_height = max(
-                self.popup.minimumHeight(),
-                int(window.height() * 0.9),
-            )
-            self.popup.resize(popup_width, popup_height)
-            self.popup.move(
-                window.mapToGlobal(window.rect().center()) - self.popup.rect().center()
-            )
-        else:
-            self.popup.move(
-                self.mapToGlobal(self.rect().center()) - self.popup.rect().center()
-            )
-        self.popup.show()
 
 
 class MudraArchiveTab(QWidget):
@@ -794,6 +808,7 @@ class MudraArchiveTab(QWidget):
         super().__init__()
         self.entries = {entry.name.lower(): entry for entry in entries}
         self.cards: dict[str, MudraCard] = {}
+        self.panel_open = False
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
@@ -804,7 +819,7 @@ class MudraArchiveTab(QWidget):
         layout.addWidget(heading)
 
         subheading = QLabel(
-            "Browse mudra sketches and open interpretation popups for notes or mirrored demonstrations."
+            "Browse mudra sketches and open interpretation details in the side panel for notes or mirrored demonstrations."
         )
         subheading.setWordWrap(True)
         subheading.setStyleSheet("color: #555; font-size: 14px;")
@@ -814,10 +829,20 @@ class MudraArchiveTab(QWidget):
         self.status_label.setStyleSheet("font-size: 14px; color: #7a4d16;")
         layout.addWidget(self.status_label)
 
+        content_row = QHBoxLayout()
+        content_row.setContentsMargins(0, 0, 0, 0)
+        content_row.setSpacing(16)
+        layout.addLayout(content_row, stretch=1)
+
+        self.side_panel = InterpretationSidePanel(self)
+        self.side_panel.collapse_button.clicked.connect(self.collapse_side_panel)
+        self.side_panel.hide()
+        content_row.addWidget(self.side_panel)
+
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(QFrame.NoFrame)
-        layout.addWidget(self.scroll_area, stretch=1)
+        content_row.addWidget(self.scroll_area, stretch=1)
 
         content = QWidget()
         self.grid = QGridLayout(content)
@@ -826,12 +851,27 @@ class MudraArchiveTab(QWidget):
         self.grid.setVerticalSpacing(16)
 
         for index, entry in enumerate(entries):
-            card = MudraCard(entry, self)
+            card = MudraCard(entry, self.show_interpretation, self)
             self.cards[entry.name.lower()] = card
             self.grid.addWidget(card, index, 0)
 
         self.grid.setRowStretch(len(entries), 1)
         self.scroll_area.setWidget(content)
+
+    def collapse_side_panel(self) -> None:
+        self.panel_open = False
+        self.side_panel.stop()
+        self.side_panel.hide()
+
+    def show_interpretation(
+        self,
+        mudra: MudraEntry,
+        interpretation: Interpretation,
+    ) -> None:
+        self.side_panel.set_interpretation(mudra, interpretation)
+        if not self.panel_open:
+            self.panel_open = True
+            self.side_panel.show()
 
     def set_hold_label(self, label: str | None) -> None:
         if not label:
@@ -894,11 +934,13 @@ class AppWindow(QMainWindow):
 
 def main() -> int:
     app = QApplication(sys.argv)
-    try:
-        window = AppWindow()
-    except Exception as exc:
-        QMessageBox.critical(None, "Webcam Error", str(exc))
-        return 1
+    window = AppWindow()
+    # try:
+    #     window = AppWindow()
+    # except Exception as exc:
+    #     print(exc)
+    #     QMessageBox.critical(None, "Webcam Error", str(exc))
+    #     return 1
 
     window.show()
     return app.exec()
