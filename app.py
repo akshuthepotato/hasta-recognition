@@ -145,6 +145,7 @@ class MudraEntry:
     name: str
     sketch_path: Path
     interpretations: tuple[Interpretation, ...]
+    performer_description: str | None = None
 
 
 class ClickableVideoLabel(QLabel):
@@ -173,11 +174,21 @@ def _format_interpretation_label(asset_path: Path) -> str:
     return asset_path.stem.replace("_", " ").title()
 
 
-def _load_directory_interpretations(directory: Path) -> tuple[Interpretation, ...]:
+MUDRA_PERFORMER_DESCRIPTIONS: dict[str, str] = {
+    "Pataka": "Performed by Nikita, Singapore Adavu.",
+}
+
+
+def _load_directory_interpretations(
+    directory: Path,
+    *,
+    performer_description: str | None = None,
+) -> tuple[Interpretation, ...]:
     video_paths = sorted(directory.glob("*.MOV"))
     return tuple(
         Interpretation(
             label=_format_interpretation_label(video_path),
+            description=performer_description,
             video_path=video_path,
         )
         for video_path in video_paths
@@ -188,7 +199,11 @@ MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
     MudraEntry(
         name="Pataka",
         sketch_path=PATHAAKAM_DIR / "sketch.png",
-        interpretations=_load_directory_interpretations(PATHAAKAM_DIR),
+        performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pataka"),
+        interpretations=_load_directory_interpretations(
+            PATHAAKAM_DIR,
+            performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pataka"),
+        ),
     ),
 )
 
@@ -633,7 +648,11 @@ class InterpretationSidePanel(QFrame):
     ) -> None:
         self.current_title = f"{mudra.name}: {interpretation.label}"
         self.title_label.setText(self.current_title)
-        self.body_label.setText(interpretation.description or "No details available.")
+        self.body_label.setText(
+            interpretation.description
+            or mudra.performer_description
+            or "No details available."
+        )
 
         video_path = interpretation.video_path
         self.current_video_path = video_path
