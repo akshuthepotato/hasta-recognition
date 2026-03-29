@@ -63,6 +63,60 @@ class MudraEntry:
 
 MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
     MudraEntry(
+        name="PlaceHolder3",
+        sketch_path=ASSETS_DIR / "pathaka_sketch.png",
+        interpretations=(
+            Interpretation(
+                label="Blessing",
+                description="Used as an open-palmed gesture of blessing, assurance, or calm restraint.",
+            ),
+            Interpretation(
+                label="Stop",
+                description="Can be read as a firm stopping gesture or a sign of setting a boundary.",
+            ),
+            Interpretation(
+                label="Mirror",
+                video_path=ASSETS_DIR / "pathaka_mirror.MOV",
+            ),
+        ),
+    ),
+    MudraEntry(
+        name="PlaceHolder2",
+        sketch_path=ASSETS_DIR / "pathaka_sketch.png",
+        interpretations=(
+            Interpretation(
+                label="Blessing",
+                description="Used as an open-palmed gesture of blessing, assurance, or calm restraint.",
+            ),
+            Interpretation(
+                label="Stop",
+                description="Can be read as a firm stopping gesture or a sign of setting a boundary.",
+            ),
+            Interpretation(
+                label="Mirror",
+                video_path=ASSETS_DIR / "pathaka_mirror.MOV",
+            ),
+        ),
+    ),
+    MudraEntry(
+        name="PlaceHolder1",
+        sketch_path=ASSETS_DIR / "pathaka_sketch.png",
+        interpretations=(
+            Interpretation(
+                label="Blessing",
+                description="Used as an open-palmed gesture of blessing, assurance, or calm restraint.",
+            ),
+            Interpretation(
+                label="Stop",
+                description="Can be read as a firm stopping gesture or a sign of setting a boundary.",
+            ),
+            Interpretation(
+                label="Mirror",
+                video_path=ASSETS_DIR / "pathaka_mirror.MOV",
+            ),
+        ),
+    ),
+    MudraEntry(
         name="Pataka",
         sketch_path=ASSETS_DIR / "pathaka_sketch.png",
         interpretations=(
@@ -464,10 +518,10 @@ class MudraArchiveTab(QWidget):
         self.status_label.setStyleSheet("font-size: 14px; color: #7a4d16;")
         layout.addWidget(self.status_label)
 
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFrameShape(QFrame.NoFrame)
-        layout.addWidget(scroll_area, stretch=1)
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QFrame.NoFrame)
+        layout.addWidget(self.scroll_area, stretch=1)
 
         content = QWidget()
         self.grid = QGridLayout(content)
@@ -481,7 +535,7 @@ class MudraArchiveTab(QWidget):
             self.grid.addWidget(card, index, 0)
 
         self.grid.setRowStretch(len(entries), 1)
-        scroll_area.setWidget(content)
+        self.scroll_area.setWidget(content)
 
     def set_hold_label(self, label: str | None) -> None:
         if not label:
@@ -494,6 +548,16 @@ class MudraArchiveTab(QWidget):
                 f"Held mudra: {label}. Matching entry is available below.")
         else:
             self.status_label.setText(f"Held mudra: {label}. No archive entry yet.")
+
+    def focus_entry(self, label: str | None) -> None:
+        if not label:
+            return
+
+        card = self.cards.get(label.lower())
+        if card is None:
+            return
+
+        self.scroll_area.ensureWidgetVisible(card, 0, 24)
 
 
 class AppWindow(QMainWindow):
@@ -508,11 +572,17 @@ class AppWindow(QMainWindow):
 
         self.tabs.addTab(self.viewer_tab, "Viewer")
         self.tabs.addTab(self.workspace_tab, "Mudra archive")
+        self.tabs.currentChanged.connect(self.handle_tab_changed)
         self.setCentralWidget(self.tabs)
 
     def handle_hold_pause(self, label: str | None) -> None:
         self.workspace_tab.set_hold_label(label)
         self.tabs.setCurrentWidget(self.workspace_tab)
+        self.workspace_tab.focus_entry(label)
+
+    def handle_tab_changed(self, index: int) -> None:
+        if self.tabs.widget(index) is not self.viewer_tab:
+            self.viewer_tab.set_paused(True)
 
 
 def main() -> int:
