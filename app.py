@@ -12,7 +12,7 @@ from pathlib import Path
 import cv2
 import mediapipe as mp
 from PySide6.QtCore import QTimer, Qt, QUrl, Signal
-from PySide6.QtGui import QImage, QKeyEvent, QPixmap
+from PySide6.QtGui import QColor, QFont, QImage, QKeyEvent, QPainter, QPen, QPixmap
 from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
@@ -48,6 +48,89 @@ from main import (
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 PATHAAKAM_DIR = ASSETS_DIR / "PATHAAKAM"
+
+INK = "#171411"
+PAPER = "#f2ead9"
+PAPER_SOFT = "#e7d7b6"
+SEPIA = "#c5a46d"
+SEPIA_BRIGHT = "#ddb36d"
+EARTH = "#7a5b31"
+UMBER = "#49321c"
+OLIVE_INK = "#6d6435"
+PANEL_DARK = "#211810"
+OVERLAY_LINE = (106, 88, 48)
+OVERLAY_ACCENT = (205, 170, 107)
+OVERLAY_TEXT = (246, 232, 205)
+APP_FONT_FAMILY = '"Aglatia Regular", "Aglatia", serif'
+
+
+APP_STYLESHEET = f"""
+QMainWindow {{
+    background: {PAPER};
+}}
+QWidget {{
+    color: {INK};
+    font-family: {APP_FONT_FAMILY};
+}}
+QTabWidget::pane {{
+    border: 1px solid {SEPIA};
+    border-radius: 20px;
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 1,
+        stop: 0 {PAPER},
+        stop: 1 {PAPER_SOFT}
+    );
+    top: -1px;
+}}
+QTabBar::tab {{
+    background: #d9c39f;
+    color: {UMBER};
+    border: 1px solid #bea06f;
+    padding: 10px 18px;
+    margin-right: 8px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+}}
+QTabBar::tab:selected {{
+    background: {PANEL_DARK};
+    color: {PAPER};
+    border-color: {PANEL_DARK};
+}}
+QScrollArea {{
+    background: {PAPER};
+    border: none;
+}}
+QScrollArea > QWidget > QWidget {{
+    background: {PAPER};
+}}
+QScrollBar:vertical {{
+    background: #d8c5a6;
+    width: 12px;
+    border-radius: 6px;
+}}
+QScrollBar::handle:vertical {{
+    background: #8d7346;
+    border-radius: 6px;
+    min-height: 32px;
+}}
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {{
+    height: 0;
+}}
+"""
+
+
+def _format_detection_name(label: str | None) -> str:
+    if not label:
+        return "No hand detected"
+    return label.replace("_", " ").title()
+
+def _build_detection_note(label: str | None, confidence: float | None) -> str:
+    del label, confidence
+    return ""
 
 
 @dataclass(frozen=True)
@@ -139,15 +222,107 @@ class WebcamViewerTab(QWidget):
         )
         self.hold_sm = HoldStateMachine(hold_duration)
 
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(18)
+
+        content_row = QHBoxLayout()
+        content_row.setSpacing(18)
+        layout.addLayout(content_row, stretch=1)
+
+        video_column = QVBoxLayout()
+        video_column.setSpacing(12)
+        content_row.addLayout(video_column, stretch=5)
+
+        self.video_frame = QFrame(self)
+        self.video_frame.setObjectName("viewerStage")
+        self.video_frame.setStyleSheet(
+            f"""
+            QFrame#viewerStage {{
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 1, y2: 1,
+                    stop: 0 #1c150f,
+                    stop: 1 #362619
+                );
+                border: 1px solid #6e5634;
+                border-radius: 28px;
+            }}
+            """
+        )
+        video_frame_layout = QVBoxLayout(self.video_frame)
+        video_frame_layout.setContentsMargins(18, 18, 18, 18)
+        video_frame_layout.setSpacing(10)
+
         self.video_label = ClickableVideoLabel("Waiting for webcam...")
         self.video_label.setAlignment(Qt.AlignCenter)
         self.video_label.setMinimumSize(640, 480)
-        self.video_label.setStyleSheet("background: #111; color: #ddd;")
+        self.video_label.setStyleSheet(
+            """
+            background: #0f0d0a;
+            color: #e6d9c0;
+            border-radius: 18px;
+            """
+        )
         self.video_label.setCursor(Qt.PointingHandCursor)
         self.video_label.clicked.connect(self.toggle_pause)
+        video_frame_layout.addWidget(self.video_label, stretch=1)
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.video_label, stretch=1)
+        video_column.addWidget(self.video_frame, stretch=1)
+
+        info_column = QVBoxLayout()
+        info_column.setSpacing(14)
+        content_row.addLayout(info_column, stretch=2)
+
+        self.signal_card = QFrame(self)
+        self.signal_card.setObjectName("signalCard")
+        self.signal_card.setStyleSheet(
+            f"""
+            QFrame#signalCard {{
+                background: {PANEL_DARK};
+                border: 1px solid #5a452c;
+                border-radius: 24px;
+            }}
+            QLabel {{
+                color: {PAPER};
+            }}
+            """
+        )
+        signal_layout = QVBoxLayout(self.signal_card)
+        signal_layout.setContentsMargins(18, 18, 18, 18)
+        signal_layout.setSpacing(10)
+
+        signal_heading = QLabel("Detection plate")
+        signal_heading.setStyleSheet(
+            f"font-size: 12px; text-transform: uppercase; letter-spacing: 0.2em; color: #cbb48d;"
+        )
+        signal_layout.addWidget(signal_heading)
+
+        self.detected_label = QLabel("No hand detected")
+        self.detected_label.setWordWrap(True)
+        self.detected_label.setStyleSheet("font-size: 28px; font-weight: 700;")
+        signal_layout.addWidget(self.detected_label)
+
+        self.confidence_label = QLabel("Confidence / --")
+        self.confidence_label.setStyleSheet(
+            "font-size: 13px; color: #dac7a4;"
+        )
+        signal_layout.addWidget(self.confidence_label)
+
+        self.hold_label = QLabel("Hold progress / 0%")
+        self.hold_label.setStyleSheet(
+            "font-size: 13px; color: #dac7a4;"
+        )
+        signal_layout.addWidget(self.hold_label)
+
+        self.note_label = QLabel(
+            ""
+        )
+        self.note_label.setWordWrap(True)
+        self.note_label.setStyleSheet("font-size: 14px; color: #f0e5cf;")
+        signal_layout.addWidget(self.note_label)
+        info_column.addWidget(self.signal_card)
+
+        info_column.addStretch(1)
 
         self.landmarker = HandLandmarker.create_from_options(
             HandLandmarkerOptions(
@@ -191,6 +366,7 @@ class WebcamViewerTab(QWidget):
             self.latest_result = None
             self.last_prediction_label = None
             self._drain_result_queue()
+            self._update_signal_labels("no hand", None, 0.0, False)
             self.update_frame()
 
     def _drain_result_queue(self) -> None:
@@ -229,6 +405,7 @@ class WebcamViewerTab(QWidget):
 
         progress = 0.0
         should_pause = False
+        detected_label = None
 
         if self.latest_result and self.latest_result.prediction is not None:
             prediction = self.latest_result.prediction
@@ -244,10 +421,17 @@ class WebcamViewerTab(QWidget):
                 should_pause,
             )
             self.draw_overlay(frame, prediction.label, prediction.confidence, progress)
+            self._update_signal_labels(
+                prediction.label,
+                prediction.confidence,
+                progress,
+                should_pause,
+            )
         else:
             self.hold_sm.reset()
             self.last_prediction_label = None
             self.draw_overlay(frame, "no hand", None, progress)
+            self._update_signal_labels("no hand", None, progress, False)
 
         self.last_frame = frame
         self.show_frame(frame)
@@ -262,47 +446,20 @@ class WebcamViewerTab(QWidget):
         confidence: float | None,
         progress: float,
     ) -> None:
-        lines = []
-        if confidence is None:
-            lines.append(f"Mudra: {label}")
-        else:
-            lines.append(f"Mudra: {label} ({confidence:.2f})")
-        lines.append(f"Hold: {progress:.0%}")
-
-        y = 30
-        for line in lines:
-            cv2.putText(
-                frame,
-                line,
-                (16, y),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.7,
-                (0, 255, 0),
-                2,
-            )
-            y += 30
+        cv2.rectangle(frame, (18, 18), (frame.shape[1] - 18, frame.shape[0] - 18), OVERLAY_LINE, 1)
+        del label, confidence, progress
 
     def draw_paused_overlay(self, frame) -> None:
-        cv2.putText(
-            frame,
-            "Paused",
-            (16, 90),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            (0, 255, 0),
-            2,
-        )
-
         height, width = frame.shape[:2]
         overlay = frame.copy()
         cv2.circle(
             overlay,
             (width // 2, height // 2),
             min(width, height) // 8,
-            (255, 255, 255),
+            (241, 225, 195),
             -1,
         )
-        frame[:] = cv2.addWeighted(overlay, 0.25, frame, 0.75, 0)
+        frame[:] = cv2.addWeighted(overlay, 0.28, frame, 0.72, 0)
         bar_height = min(width, height) // 10
         bar_width = max(10, bar_height // 3)
         gap = bar_width
@@ -314,16 +471,31 @@ class WebcamViewerTab(QWidget):
             frame,
             (center_x - gap // 2 - bar_width, top),
             (center_x - gap // 2, bottom),
-            (40, 40, 40),
+            (56, 43, 28),
             -1,
         )
         cv2.rectangle(
             frame,
             (center_x + gap // 2, top),
             (center_x + gap // 2 + bar_width, bottom),
-            (40, 40, 40),
+            (56, 43, 28),
             -1,
         )
+
+    def _update_signal_labels(
+        self,
+        label: str | None,
+        confidence: float | None,
+        progress: float,
+        paused: bool,
+    ) -> None:
+        formatted_label = _format_detection_name(label)
+        self.detected_label.setText(formatted_label)
+        self.confidence_label.setText(
+            "Confidence / --" if confidence is None else f"Confidence / {confidence:.0%}"
+        )
+        self.hold_label.setText(f"Hold progress / {progress:.0%}")
+        self.note_label.setText(_build_detection_note(label, confidence))
 
     def show_frame(self, frame) -> None:
         display_frame = frame
@@ -370,25 +542,30 @@ class InterpretationSidePanel(QFrame):
         self.setObjectName("interpretationPanel")
         self.setMinimumWidth(420)
         self.setStyleSheet(
-            """
-            QFrame#interpretationPanel {
-                background: #101010;
-                border: 1px solid #353535;
-                border-radius: 12px;
-            }
-            QLabel {
-                color: #f2f2f2;
-            }
-            QPushButton {
-                background: #2d2116;
-                color: #fffaf0;
-                border: none;
-                border-radius: 10px;
-                padding: 8px 12px;
-            }
-            QPushButton:hover {
-                background: #473424;
-            }
+            f"""
+            QFrame#interpretationPanel {{
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 1, y2: 1,
+                    stop: 0 #1e1610,
+                    stop: 1 #2b1f15
+                );
+                border: 1px solid #6e5634;
+                border-radius: 22px;
+            }}
+            QLabel {{
+                color: #f5ead5;
+            }}
+            QPushButton {{
+                background: #d4b07a;
+                color: #26180e;
+                border: 1px solid #b89562;
+                border-radius: 14px;
+                padding: 9px 14px;
+                font-weight: 700;
+            }}
+            QPushButton:hover {{
+                background: #e2bf87;
+            }}
             """
         )
 
@@ -410,7 +587,9 @@ class InterpretationSidePanel(QFrame):
         layout.addLayout(header)
 
         self.title_label = QLabel(self.current_title)
-        self.title_label.setStyleSheet("font-size: 18px; font-weight: 700;")
+        self.title_label.setStyleSheet(
+            f"font-size: 22px; font-weight: 700; color: {PAPER};"
+        )
         self.title_label.setWordWrap(True)
         header.addWidget(self.title_label, stretch=1)
 
@@ -436,7 +615,9 @@ class InterpretationSidePanel(QFrame):
         self.body_label = QLabel(
             "Select a mudra interpretation to play the mirrored demonstration or read its note.")
         self.body_label.setWordWrap(True)
-        self.body_label.setStyleSheet("font-size: 14px; line-height: 1.4;")
+        self.body_label.setStyleSheet(
+            f"font-size: 14px; line-height: 1.4; color: #f0dfc0;"
+        )
         layout.addWidget(self.body_label)
 
         self.player = QMediaPlayer(self)
@@ -578,27 +759,28 @@ class InterpretationStage(QFrame):
 
         self.setMinimumHeight(420)
         self.setStyleSheet(
-            """
-            QFrame {
-                background: #fffaf2;
-                border-radius: 18px;
-            }
-            QLabel {
+            f"""
+            QFrame {{
+                background: {PAPER};
+                border: none;
+                border-radius: 24px;
+            }}
+            QLabel {{
                 background: transparent;
-                color: #2d2116;
-            }
-            QPushButton {
-                background: #f4ebc2;
-                color: #543114;
-                border: 1px solid #e6d9a8;
-                border-radius: 12px;
+                color: {UMBER};
+            }}
+            QPushButton {{
+                background: #f0dfbc;
+                color: #51331b;
+                border: 1px solid #c8ab78;
+                border-radius: 14px;
                 padding: 8px 18px;
                 font-size: 13px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background: #fff5cb;
-            }
+                font-weight: 700;
+            }}
+            QPushButton:hover {{
+                background: #f7e8c9;
+            }}
             """
         )
 
@@ -622,6 +804,26 @@ class InterpretationStage(QFrame):
     def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)
         self._layout_stage()
+
+    def paintEvent(self, event) -> None:  # noqa: N802
+        super().paintEvent(event)
+        if not self.buttons or self.sketch_label.geometry().isNull():
+            return
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setPen(QPen(QColor("#b89967"), 1))
+
+        hand_rect = self.sketch_label.geometry()
+        anchor = hand_rect.center()
+        for button in self.buttons:
+            button_rect = button.geometry()
+            target = button_rect.center()
+            painter.drawLine(anchor, target)
+            painter.setBrush(QColor("#d6b784"))
+            painter.setPen(Qt.NoPen)
+            painter.drawEllipse(target, 3, 3)
+            painter.setPen(QPen(QColor("#b89967"), 1))
 
     def _layout_stage(self) -> None:
         stage_width = max(self.width(), 1)
@@ -768,15 +970,15 @@ class MudraCard(QFrame):
         self.on_interpretation_click = on_interpretation_click
         self.setObjectName("mudraCard")
         self.setStyleSheet(
-            """
-            QFrame#mudraCard {
-                background: #f7f2e8;
-                border: 1px solid #d8c6aa;
-                border-radius: 16px;
-            }
-            QLabel {
-                color: #2d2116;
-            }
+            f"""
+            QFrame#mudraCard {{
+                background: {PAPER};
+                border: none;
+                border-radius: 26px;
+            }}
+            QLabel {{
+                color: #25180f;
+            }}
             """
         )
 
@@ -785,14 +987,18 @@ class MudraCard(QFrame):
         layout.setSpacing(16)
 
         name_label = QLabel(entry.name)
-        name_label.setStyleSheet("font-size: 22px; font-weight: 700;")
+        name_label.setStyleSheet(
+            f"font-size: 28px; font-weight: 700; color: {INK};"
+        )
         layout.addWidget(name_label)
 
         instructions = QLabel(
             "Choose an interpretation from around the hasta to open its note or mirrored demonstration."
         )
         instructions.setWordWrap(True)
-        instructions.setStyleSheet("font-size: 14px;")
+        instructions.setStyleSheet(
+            f"font-size: 14px; color: {EARTH};"
+        )
         layout.addWidget(instructions)
 
         stage = InterpretationStage(entry, self.on_interpretation_click, self)
@@ -807,23 +1013,14 @@ class MudraArchiveTab(QWidget):
         self.panel_open = False
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(14)
 
         heading = QLabel("Mudra archive")
-        heading.setStyleSheet("font-size: 28px; font-weight: 700;")
-        layout.addWidget(heading)
-
-        subheading = QLabel(
-            "Browse mudra sketches and open interpretation details in the side panel for notes or mirrored demonstrations."
+        heading.setStyleSheet(
+            f"font-size: 30px; font-weight: 700; color: {INK};"
         )
-        subheading.setWordWrap(True)
-        subheading.setStyleSheet("color: #555; font-size: 14px;")
-        layout.addWidget(subheading)
-
-        self.status_label = QLabel("Waiting for an automatic hold pause.")
-        self.status_label.setStyleSheet("font-size: 14px; color: #7a4d16;")
-        layout.addWidget(self.status_label)
+        layout.addWidget(heading)
 
         content_row = QHBoxLayout()
         content_row.setContentsMargins(0, 0, 0, 0)
@@ -840,13 +1037,15 @@ class MudraArchiveTab(QWidget):
         self.scroll_area.setFrameShape(QFrame.NoFrame)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setStyleSheet(f"background: {PAPER}; border: none;")
         content_row.addWidget(self.scroll_area, stretch=1)
 
         content = QWidget()
+        content.setStyleSheet(f"background: {PAPER};")
         self.grid = QGridLayout(content)
         self.grid.setContentsMargins(0, 4, 0, 4)
-        self.grid.setHorizontalSpacing(16)
-        self.grid.setVerticalSpacing(16)
+        self.grid.setHorizontalSpacing(20)
+        self.grid.setVerticalSpacing(20)
 
         for index, entry in enumerate(entries):
             card = MudraCard(entry, self.show_interpretation, self)
@@ -888,16 +1087,7 @@ class MudraArchiveTab(QWidget):
         self.side_panel.set_target_width(int(screen_width * 0.4))
 
     def set_hold_label(self, label: str | None) -> None:
-        if not label:
-            self.status_label.setText("Hold completed.")
-            return
-
-        normalized = label.lower()
-        if normalized in self.cards:
-            self.status_label.setText(
-                f"Held mudra: {label}. Matching entry is available below.")
-        else:
-            self.status_label.setText(f"Held mudra: {label}. No archive entry yet.")
+        del label
 
     def focus_entry(self, label: str | None) -> None:
         if not label:
@@ -914,7 +1104,8 @@ class AppWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Hasta Recognition")
-        self.resize(960, 720)
+        self.resize(1280, 860)
+        self.setStyleSheet(APP_STYLESHEET)
 
         self.tabs = QTabWidget()
         self.workspace_tab = MudraArchiveTab(MUDRA_ARCHIVE)
@@ -948,6 +1139,7 @@ class AppWindow(QMainWindow):
 
 def main() -> int:
     app = QApplication(sys.argv)
+    app.setFont(QFont("Aglatia Regular"))
     window = AppWindow()
     # try:
     #     window = AppWindow()
