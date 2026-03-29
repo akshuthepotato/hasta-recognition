@@ -1,0 +1,1 @@
+- [ ] precompute the "thumbnails" so that opening the popup is a lot faster

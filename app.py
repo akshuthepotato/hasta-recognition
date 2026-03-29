@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import queue
+import math
+import random
 import sys
 import time
 from collections.abc import Callable
@@ -18,7 +20,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QFrame,
     QGridLayout,
-    QHBoxLayout,
     QLabel,
     QMainWindow,
     QMessageBox,
@@ -570,6 +571,155 @@ class InterpretationPopup(QDialog):
         super().closeEvent(event)
 
 
+class InterpretationStage(QFrame):
+    def __init__(
+        self,
+        entry: MudraEntry,
+        on_interpretation_click: Callable[[MudraEntry, Interpretation], None],
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.entry = entry
+        self.on_interpretation_click = on_interpretation_click
+        self.source_pixmap = QPixmap(str(entry.sketch_path))
+        self.buttons: list[QPushButton] = []
+        self.cloud_points: list[tuple[float, float]] = []
+
+        self.setMinimumHeight(420)
+        self.setStyleSheet(
+            """
+            QFrame {
+                background: #fffaf2;
+                border-radius: 18px;
+            }
+            QLabel {
+                background: transparent;
+                color: #2d2116;
+            }
+            QPushButton {
+                background: #f4ebc2;
+                color: #543114;
+                border: 1px solid #e6d9a8;
+                border-radius: 12px;
+                padding: 8px 18px;
+                font-size: 13px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: #fff5cb;
+            }
+            """
+        )
+
+        self.sketch_label = QLabel(self)
+        self.sketch_label.setAlignment(Qt.AlignCenter)
+
+        if self.source_pixmap.isNull():
+            self.sketch_label.setText("Sketch unavailable")
+
+        for interpretation in entry.interpretations:
+            button = QPushButton(interpretation.label.lower(), self)
+            button.clicked.connect(
+                lambda _checked=False, mudra=entry, item=interpretation: self.on_interpretation_click(
+                    mudra,
+                    item,
+                )
+            )
+            button.adjustSize()
+            self.buttons.append(button)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self._layout_stage()
+
+    def _layout_stage(self) -> None:
+        stage_width = max(self.width(), 1)
+        stage_height = max(self.height(), 1)
+        cluster_width = min(stage_width, 540)
+        cluster_height = min(stage_height, 420)
+        cluster_left = int((stage_width - cluster_width) / 2)
+        cluster_top = int((stage_height - cluster_height) / 2)
+        hand_box = (
+            0.5,
+            0.58,
+            0.33,
+            1.02,
+        )
+
+        self.cloud_points = self._build_cloud_points(
+            len(self.buttons),
+            hand_box=hand_box,
+        )
+
+        hand_center_x, hand_center_y, hand_width_ratio, hand_height_ratio = hand_box
+        hand_width = int(cluster_width * hand_width_ratio)
+        hand_height = int(cluster_height * hand_height_ratio)
+        hand_x = int(cluster_left + cluster_width * hand_center_x - hand_width / 2)
+        hand_y = int(cluster_top + cluster_height * hand_center_y - hand_height / 2)
+        self.sketch_label.setGeometry(hand_x, hand_y, hand_width, hand_height)
+
+        if not self.source_pixmap.isNull():
+            scaled = self.source_pixmap.scaled(
+                self.sketch_label.size(),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation,
+            )
+            self.sketch_label.setPixmap(scaled)
+
+        for button, (anchor_x, anchor_y) in zip(self.buttons, self.cloud_points):
+            button.adjustSize()
+            x = int(cluster_left + cluster_width * anchor_x - button.width() / 2)
+            y = int(cluster_top + cluster_height * anchor_y - button.height() / 2)
+            x = max(cluster_left + 16, min(cluster_left +
+                    cluster_width - button.width() - 16, x))
+            y = max(cluster_top + 16, min(cluster_top +
+                    cluster_height - button.height() - 16, y))
+            button.move(x, y)
+
+    def _build_cloud_points(
+        self,
+        count: int,
+        hand_box: tuple[float, float, float, float],
+    ) -> list[tuple[float, float]]:
+        if count <= 0:
+            return []
+
+        rng = random.Random(f"{self.entry.name}:{count}")
+        points: list[tuple[float, float]] = []
+        attempts = 0
+        hand_center_x, hand_center_y, hand_width, hand_height = hand_box
+        exclusion_left = hand_center_x - hand_width * 0.55
+        exclusion_right = hand_center_x + hand_width * 0.55
+        exclusion_top = hand_center_y - hand_height * 0.55
+        exclusion_bottom = hand_center_y + hand_height * 0.55
+
+        while len(points) < count and attempts < 400:
+            attempts += 1
+            angle = rng.uniform(0.0, 2.0 * math.pi)
+            radius_x = rng.uniform(0.22, 0.33)
+            radius_y = rng.uniform(0.18, 0.28)
+            x = 0.5 + radius_x * math.cos(angle)
+            y = 0.5 + radius_y * math.sin(angle)
+
+            if not (0.14 <= x <= 0.86 and 0.12 <= y <= 0.88):
+                continue
+
+            if exclusion_left <= x <= exclusion_right and exclusion_top <= y <= exclusion_bottom:
+                continue
+
+            if any((x - px) ** 2 + (y - py) ** 2 < 0.016 for px, py in points):
+                continue
+
+            points.append((x, y))
+
+        while len(points) < count:
+            index = len(points)
+            angle = (2.0 * math.pi * index) / count
+            points.append((0.5 + 0.31 * math.cos(angle), 0.5 + 0.26 * math.sin(angle)))
+
+        return points
+
+
 class MudraCard(QFrame):
     def __init__(self, entry: MudraEntry, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -586,66 +736,26 @@ class MudraCard(QFrame):
             QLabel {
                 color: #2d2116;
             }
-            QPushButton {
-                background: #2d2116;
-                color: #fffaf0;
-                border: none;
-                border-radius: 10px;
-                padding: 8px 14px;
-            }
-            QPushButton:hover {
-                background: #473424;
-            }
             """
         )
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(18, 18, 18, 18)
-        layout.setSpacing(14)
+        layout.setSpacing(16)
 
         name_label = QLabel(entry.name)
         name_label.setStyleSheet("font-size: 22px; font-weight: 700;")
         layout.addWidget(name_label)
 
-        sketch_label = QLabel()
-        sketch_label.setAlignment(Qt.AlignCenter)
-        sketch_label.setMinimumHeight(240)
-        sketch_label.setStyleSheet(
-            "background: #fffaf2; border: 1px solid #dcc8aa; border-radius: 12px;"
-        )
-        pixmap = QPixmap(str(entry.sketch_path))
-        if pixmap.isNull():
-            sketch_label.setText("Sketch unavailable")
-        else:
-            sketch_label.setPixmap(
-                pixmap.scaled(
-                    420,
-                    320,
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation,
-                )
-            )
-        layout.addWidget(sketch_label)
-
         instructions = QLabel(
-            "Choose an interpretation to see a note or demonstration.")
+            "Choose an interpretation from around the hasta to open its note or mirrored demonstration."
+        )
         instructions.setWordWrap(True)
         instructions.setStyleSheet("font-size: 14px;")
         layout.addWidget(instructions)
 
-        buttons_layout = QHBoxLayout()
-        buttons_layout.setSpacing(10)
-        for interpretation in entry.interpretations:
-            button = QPushButton(interpretation.label)
-            button.clicked.connect(
-                lambda _checked=False, mudra=entry, item=interpretation: self.show_interpretation(
-                    mudra,
-                    item,
-                )
-            )
-            buttons_layout.addWidget(button)
-        buttons_layout.addStretch(1)
-        layout.addLayout(buttons_layout)
+        stage = InterpretationStage(entry, self.show_interpretation, self)
+        layout.addWidget(stage)
 
     def show_interpretation(
         self,
