@@ -47,6 +47,7 @@ from main import (
 )
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+PATHAAKAM_DIR = ASSETS_DIR / "PATHAAKAM"
 
 
 @dataclass(frozen=True)
@@ -85,84 +86,26 @@ class ClickableVideoLabel(QLabel):
         return pixmap.rect().translated(x, y)
 
 
+def _format_interpretation_label(asset_path: Path) -> str:
+    return asset_path.stem.replace("_", " ").title()
+
+
+def _load_directory_interpretations(directory: Path) -> tuple[Interpretation, ...]:
+    video_paths = sorted(directory.glob("*.MOV"))
+    return tuple(
+        Interpretation(
+            label=_format_interpretation_label(video_path),
+            video_path=video_path,
+        )
+        for video_path in video_paths
+    )
+
+
 MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
     MudraEntry(
         name="Pataka",
-        sketch_path=ASSETS_DIR / "pathaka_sketch.png",
-        interpretations=(
-            Interpretation(
-                label="Blessing",
-                description="Used as an open-palmed gesture of blessing, assurance, or calm restraint.",
-            ),
-            Interpretation(
-                label="Stop",
-                description="Can be read as a firm stopping gesture or a sign of setting a boundary.",
-            ),
-            Interpretation(
-                label="Mirror",
-                video_path=ASSETS_DIR / "pathaka_mirror.MOV",
-            ),
-            Interpretation(
-                label="River",
-                description="Suggests the flow of water, continuity, or a scene shaped by movement.",
-            ),
-            Interpretation(
-                label="Wind",
-                description="Can indicate moving air, softness, or a passing natural force.",
-            ),
-            Interpretation(
-                label="Night",
-                description="Used to evoke darkness, stillness, or the arrival of evening.",
-            ),
-            Interpretation(
-                label="Forest",
-                description="Points to trees, growth, or the feeling of a wooded landscape.",
-            ),
-            Interpretation(
-                label="Gate",
-                description="Can imply an entrance, threshold, or ceremonial passage.",
-            ),
-            Interpretation(
-                label="Shield",
-                description="Reads as protection, guarding, or holding a defensive posture.",
-            ),
-            Interpretation(
-                label="Cloud",
-                description="Suggests drifting sky forms, softness, or a suspended atmosphere.",
-            ),
-            Interpretation(
-                label="Prayer",
-                description="Can support a devotional meaning when paired with other expressive actions.",
-            ),
-            Interpretation(
-                label="Oath",
-                description="May be used to signal a vow, promise, or solemn declaration.",
-            ),
-            Interpretation(
-                label="Greeting",
-                description="Works as a welcoming or acknowledging gesture in performance contexts.",
-            ),
-            Interpretation(
-                label="Beacon",
-                description="Suggests signaling, visibility, or drawing attention outward.",
-            ),
-            Interpretation(
-                label="Lotus",
-                description="Can be interpreted as a floral reference when staged with complementary gestures.",
-            ),
-            Interpretation(
-                label="Banner",
-                description="Evokes something lifted, displayed, or ceremonially presented.",
-            ),
-            Interpretation(
-                label="Promise",
-                description="Supports meanings tied to resolve, intent, or spoken commitment.",
-            ),
-            Interpretation(
-                label="Horizon",
-                description="Can frame distance, openness, or a far-reaching scene.",
-            ),
-        ),
+        sketch_path=PATHAAKAM_DIR / "sketch.png",
+        interpretations=_load_directory_interpretations(PATHAAKAM_DIR),
     ),
 )
 
