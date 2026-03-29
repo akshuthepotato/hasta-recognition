@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">3.9,<3.12"
 dependencies = [
     "mediapipe>=0.10.33",
+    "pyside6>=6.10.2",
     "scikit-learn>=1.6.1",
     "xgboost>=2.1.4",
 ]
