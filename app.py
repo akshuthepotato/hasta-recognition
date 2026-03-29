@@ -4,17 +4,26 @@ import queue
 import sys
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
 
 import cv2
 import mediapipe as mp
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QTimer, Qt, QUrl
 from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtMultimedia import QMediaPlayer
+from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
     QLabel,
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -33,6 +42,44 @@ from main import (
     VisionRunningMode,
     draw_hand_landmarks,
     draw_progress_circle,
+)
+
+ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+
+
+@dataclass(frozen=True)
+class Interpretation:
+    label: str
+    description: str | None = None
+    video_path: Path | None = None
+
+
+@dataclass(frozen=True)
+class MudraEntry:
+    name: str
+    sketch_path: Path
+    interpretations: tuple[Interpretation, ...]
+
+
+MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
+    MudraEntry(
+        name="Pataka",
+        sketch_path=ASSETS_DIR / "pathaka_sketch.png",
+        interpretations=(
+            Interpretation(
+                label="Blessing",
+                description="Used as an open-palmed gesture of blessing, assurance, or calm restraint.",
+            ),
+            Interpretation(
+                label="Stop",
+                description="Can be read as a firm stopping gesture or a sign of setting a boundary.",
+            ),
+            Interpretation(
+                label="Mirror",
+                video_path=ASSETS_DIR / "pathaka_mirror.MOV",
+            ),
+        ),
+    ),
 )
 
 
@@ -243,22 +290,210 @@ class WebcamViewerTab(QWidget):
         super().closeEvent(event)
 
 
-class PlaceholderTab(QWidget):
-    def __init__(self) -> None:
-        super().__init__()
+class InterpretationPopup(QDialog):
+    def __init__(
+        self,
+        title: str,
+        description: str | None = None,
+        video_path: Path | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
+        self.setMinimumSize(420, 320)
+        self.setStyleSheet(
+            """
+            QDialog {
+                background: #101010;
+                border: 1px solid #353535;
+                border-radius: 12px;
+            }
+            QLabel {
+                color: #f2f2f2;
+            }
+            """
+        )
 
-        self.label = QLabel("Waiting for an automatic hold pause.")
-        self.label.setAlignment(Qt.AlignCenter)
+        self.player: QMediaPlayer | None = None
+        self.video_widget: QVideoWidget | None = None
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self.label)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
+
+        title_label = QLabel(title)
+        title_label.setStyleSheet("font-size: 18px; font-weight: 700;")
+        layout.addWidget(title_label)
+
+        if video_path is not None and video_path.exists():
+            self.video_widget = QVideoWidget(self)
+            self.video_widget.setMinimumSize(520, 360)
+            layout.addWidget(self.video_widget, stretch=1)
+
+            self.player = QMediaPlayer(self)
+            self.player.setVideoOutput(self.video_widget)
+            self.player.setSource(QUrl.fromLocalFile(str(video_path.resolve())))
+            self.player.play()
+        else:
+            body_label = QLabel(description or "No details available.")
+            body_label.setWordWrap(True)
+            body_label.setStyleSheet("font-size: 14px; line-height: 1.4;")
+            layout.addWidget(body_label)
+
+    def closeEvent(self, event) -> None:  # noqa: N802
+        if self.player is not None:
+            self.player.stop()
+        super().closeEvent(event)
+
+
+class MudraCard(QFrame):
+    def __init__(self, entry: MudraEntry, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.entry = entry
+        self.popup: InterpretationPopup | None = None
+        self.setObjectName("mudraCard")
+        self.setStyleSheet(
+            """
+            QFrame#mudraCard {
+                background: #f7f2e8;
+                border: 1px solid #d8c6aa;
+                border-radius: 16px;
+            }
+            QLabel {
+                color: #2d2116;
+            }
+            QPushButton {
+                background: #2d2116;
+                color: #fffaf0;
+                border: none;
+                border-radius: 10px;
+                padding: 8px 14px;
+            }
+            QPushButton:hover {
+                background: #473424;
+            }
+            """
+        )
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(14)
+
+        name_label = QLabel(entry.name)
+        name_label.setStyleSheet("font-size: 22px; font-weight: 700;")
+        layout.addWidget(name_label)
+
+        sketch_label = QLabel()
+        sketch_label.setAlignment(Qt.AlignCenter)
+        sketch_label.setMinimumHeight(240)
+        sketch_label.setStyleSheet(
+            "background: #fffaf2; border: 1px solid #dcc8aa; border-radius: 12px;"
+        )
+        pixmap = QPixmap(str(entry.sketch_path))
+        if pixmap.isNull():
+            sketch_label.setText("Sketch unavailable")
+        else:
+            sketch_label.setPixmap(
+                pixmap.scaled(
+                    420,
+                    320,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation,
+                )
+            )
+        layout.addWidget(sketch_label)
+
+        instructions = QLabel(
+            "Choose an interpretation to see a note or demonstration.")
+        instructions.setWordWrap(True)
+        instructions.setStyleSheet("font-size: 14px;")
+        layout.addWidget(instructions)
+
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(10)
+        for interpretation in entry.interpretations:
+            button = QPushButton(interpretation.label)
+            button.clicked.connect(
+                lambda _checked=False, mudra=entry, item=interpretation: self.show_interpretation(
+                    mudra,
+                    item,
+                )
+            )
+            buttons_layout.addWidget(button)
+        buttons_layout.addStretch(1)
+        layout.addLayout(buttons_layout)
+
+    def show_interpretation(
+        self,
+        mudra: MudraEntry,
+        interpretation: Interpretation,
+    ) -> None:
+        self.popup = InterpretationPopup(
+            title=f"{mudra.name}: {interpretation.label}",
+            description=interpretation.description,
+            video_path=interpretation.video_path,
+            parent=self,
+        )
+        self.popup.move(self.mapToGlobal(self.rect().center()) -
+                        self.popup.rect().center())
+        self.popup.show()
+
+
+class MudraArchiveTab(QWidget):
+    def __init__(self, entries: tuple[MudraEntry, ...]) -> None:
+        super().__init__()
+        self.entries = {entry.name.lower(): entry for entry in entries}
+        self.cards: dict[str, MudraCard] = {}
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
+
+        heading = QLabel("Mudra archive")
+        heading.setStyleSheet("font-size: 28px; font-weight: 700;")
+        layout.addWidget(heading)
+
+        subheading = QLabel(
+            "Browse mudra sketches and open interpretation popups for notes or mirrored demonstrations."
+        )
+        subheading.setWordWrap(True)
+        subheading.setStyleSheet("color: #555; font-size: 14px;")
+        layout.addWidget(subheading)
+
+        self.status_label = QLabel("Waiting for an automatic hold pause.")
+        self.status_label.setStyleSheet("font-size: 14px; color: #7a4d16;")
+        layout.addWidget(self.status_label)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        layout.addWidget(scroll_area, stretch=1)
+
+        content = QWidget()
+        self.grid = QGridLayout(content)
+        self.grid.setContentsMargins(0, 4, 0, 4)
+        self.grid.setHorizontalSpacing(16)
+        self.grid.setVerticalSpacing(16)
+
+        for index, entry in enumerate(entries):
+            card = MudraCard(entry, self)
+            self.cards[entry.name.lower()] = card
+            self.grid.addWidget(card, index, 0)
+
+        self.grid.setRowStretch(len(entries), 1)
+        scroll_area.setWidget(content)
 
     def set_hold_label(self, label: str | None) -> None:
-        if label:
-            self.label.setText(f"Held mudra: {label}")
-            # TODO: add more stuff here
+        if not label:
+            self.status_label.setText("Hold completed.")
+            return
+
+        normalized = label.lower()
+        if normalized in self.cards:
+            self.status_label.setText(
+                f"Held mudra: {label}. Matching entry is available below.")
         else:
-            self.label.setText("Hold completed.")
+            self.status_label.setText(f"Held mudra: {label}. No archive entry yet.")
 
 
 class AppWindow(QMainWindow):
@@ -268,11 +503,11 @@ class AppWindow(QMainWindow):
         self.resize(960, 720)
 
         self.tabs = QTabWidget()
-        self.workspace_tab = PlaceholderTab()
+        self.workspace_tab = MudraArchiveTab(MUDRA_ARCHIVE)
         self.viewer_tab = WebcamViewerTab(on_hold_pause=self.handle_hold_pause)
 
         self.tabs.addTab(self.viewer_tab, "Viewer")
-        self.tabs.addTab(self.workspace_tab, "Workspace")
+        self.tabs.addTab(self.workspace_tab, "Mudra archive")
         self.setCentralWidget(self.tabs)
 
     def handle_hold_pause(self, label: str | None) -> None:
