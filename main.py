@@ -266,12 +266,17 @@ def draw_hand_landmarks(frame: np.ndarray, result: HandLandmarkerResult) -> None
 
 
 def draw_overlay(frame, prediction, fps):
+    def display_hasta_name(label: str) -> str:
+        return "Pathaakam" if label == "Pataka" else label.replace("_", " ").title()
+
     lines = [f"FPS: {fps:.1f}"]
 
     if prediction is None:
-        lines.append("Mudra: no hand")
+        lines.append("Hasta: no hand")
     else:
-        lines.append(f"Mudra: {prediction.label} ({prediction.confidence:.2f})")
+        lines.append(
+            f"Hasta: {display_hasta_name(prediction.label)} ({prediction.confidence:.2f})"
+        )
 
     y = 30
     for line in lines:
@@ -362,7 +367,7 @@ def run(args):
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run live MediaPipe hand tracking and classify mudras from a webcam feed."
+        description="Run live MediaPipe hand tracking and classify hastas from a webcam feed."
     )
     parser.add_argument(
         "--camera-id",
@@ -416,7 +421,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--classification-threshold",
         type=float,
         default=0.5,
-        help="Minimum classifier probability before a mudra label is shown.",
+        help="Minimum classifier probability before a hasta label is shown.",
     )
     return parser
 

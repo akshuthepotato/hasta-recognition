@@ -12,7 +12,7 @@ from pathlib import Path
 import cv2
 import mediapipe as mp
 from PySide6.QtCore import QTimer, Qt, QUrl, Signal
-from PySide6.QtGui import QColor, QFont, QImage, QKeyEvent, QPainter, QPen, QPixmap
+from PySide6.QtGui import QFont, QImage, QKeyEvent, QPixmap
 from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
@@ -123,10 +123,16 @@ QScrollBar::sub-line:vertical {{
 """
 
 
+def _display_hasta_name(label: str) -> str:
+    if label == "Pataka":
+        return "Pathaakam"
+    return label.replace("_", " ").title()
+
+
 def _format_detection_name(label: str | None) -> str:
     if not label:
         return "No hand detected"
-    return label.replace("_", " ").title()
+    return _display_hasta_name(label)
 
 def _build_detection_note(label: str | None, confidence: float | None) -> str:
     del label, confidence
@@ -175,7 +181,7 @@ def _format_interpretation_label(asset_path: Path) -> str:
 
 
 MUDRA_PERFORMER_DESCRIPTIONS: dict[str, str] = {
-    "Pataka": "Performed by Nikita, Singapore Adavu.",
+    "Pathaakam": "Performed by Nikita, Singapore Adavu.",
 }
 
 
@@ -197,12 +203,12 @@ def _load_directory_interpretations(
 
 MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
     MudraEntry(
-        name="Pataka",
+        name="Pathaakam",
         sketch_path=PATHAAKAM_DIR / "sketch.png",
-        performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pataka"),
+        performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pathaakam"),
         interpretations=_load_directory_interpretations(
             PATHAAKAM_DIR,
-            performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pataka"),
+            performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pathaakam"),
         ),
     ),
 )
@@ -628,7 +634,7 @@ class InterpretationSidePanel(QFrame):
         self.media_layout.addWidget(self.poster_label)
 
         self.body_label = QLabel(
-            "Select a mudra interpretation to play the mirrored demonstration or read its note.")
+            "Select a hasta interpretation to play the mirrored demonstration or read its note.")
         self.body_label.setWordWrap(True)
         self.body_label.setStyleSheet(
             f"font-size: 14px; line-height: 1.4; color: #f0dfc0;"
@@ -824,26 +830,6 @@ class InterpretationStage(QFrame):
         super().resizeEvent(event)
         self._layout_stage()
 
-    def paintEvent(self, event) -> None:  # noqa: N802
-        super().paintEvent(event)
-        if not self.buttons or self.sketch_label.geometry().isNull():
-            return
-
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(QPen(QColor("#b89967"), 1))
-
-        hand_rect = self.sketch_label.geometry()
-        anchor = hand_rect.center()
-        for button in self.buttons:
-            button_rect = button.geometry()
-            target = button_rect.center()
-            painter.drawLine(anchor, target)
-            painter.setBrush(QColor("#d6b784"))
-            painter.setPen(Qt.NoPen)
-            painter.drawEllipse(target, 3, 3)
-            painter.setPen(QPen(QColor("#b89967"), 1))
-
     def _layout_stage(self) -> None:
         stage_width = max(self.width(), 1)
         stage_height = max(self.height(), 1)
@@ -1012,7 +998,7 @@ class MudraCard(QFrame):
         layout.addWidget(name_label)
 
         instructions = QLabel(
-            "Choose an interpretation from around the hasta to open its note or mirrored demonstration."
+            "Choose an interpretation to open its note or mirrored demonstration."
         )
         instructions.setWordWrap(True)
         instructions.setStyleSheet(
@@ -1035,7 +1021,7 @@ class MudraArchiveTab(QWidget):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(14)
 
-        heading = QLabel("Mudra archive")
+        heading = QLabel("Hasta archive")
         heading.setStyleSheet(
             f"font-size: 30px; font-weight: 700; color: {INK};"
         )
@@ -1131,7 +1117,7 @@ class AppWindow(QMainWindow):
         self.viewer_tab = WebcamViewerTab(on_hold_pause=self.handle_hold_pause)
 
         self.tabs.addTab(self.viewer_tab, "Viewer")
-        self.tabs.addTab(self.workspace_tab, "Mudra archive")
+        self.tabs.addTab(self.workspace_tab, "Hasta archive")
         self.tabs.currentChanged.connect(self.handle_tab_changed)
         self.setCentralWidget(self.tabs)
 
