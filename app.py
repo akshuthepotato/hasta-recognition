@@ -48,6 +48,7 @@ from main import (
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 PATHAAKAM_DIR = ASSETS_DIR / "PATHAAKAM"
+HAMSASYAM_DIR = ASSETS_DIR / "hamsasyam"
 
 INK = "#171411"
 PAPER = "#f2ead9"
@@ -126,6 +127,8 @@ QScrollBar::sub-line:vertical {{
 def _display_hasta_name(label: str) -> str:
     if label == "Pataka":
         return "Pathaakam"
+    if label == "Hamsasya":
+        return "Hamsasyam"
     return label.replace("_", " ").title()
 
 
@@ -188,6 +191,7 @@ def _format_interpretation_label(asset_path: Path) -> str:
 
 MUDRA_PERFORMER_DESCRIPTIONS: dict[str, str] = {
     "Pathaakam": "Performed by Nikita, Singapore Adavu.",
+    "Hamsasyam": "Performed by Nikita, Singapore Adavu.",
 }
 
 
@@ -215,6 +219,15 @@ MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
         interpretations=_load_directory_interpretations(
             PATHAAKAM_DIR,
             performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pathaakam"),
+        ),
+    ),
+    MudraEntry(
+        name="Hamsasyam",
+        sketch_path=HAMSASYAM_DIR / "hamsasyam sketch.png",
+        performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Hamsasyam"),
+        interpretations=_load_directory_interpretations(
+            HAMSASYAM_DIR,
+            performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Hamsasyam"),
         ),
     ),
 )
@@ -918,7 +931,16 @@ class InterpretationStage(QFrame):
                         rect, cluster_left, cluster_top, cluster_width, cluster_height, margin
                     ):
                         continue
-                    if self._rect_intersects(rect, (int(hand_left), int(hand_top), int(hand_right - hand_left), int(hand_bottom - hand_top)), padding=12):
+                    if self._rect_intersects(
+                        rect,
+                        (
+                            int(hand_left),
+                            int(hand_top),
+                            int(hand_right - hand_left),
+                            int(hand_bottom - hand_top),
+                        ),
+                        padding=12,
+                    ):
                         continue
                     if any(self._rect_intersects(rect, other, padding=8) for other in occupied):
                         continue
