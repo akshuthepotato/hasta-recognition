@@ -129,6 +129,12 @@ def _display_hasta_name(label: str) -> str:
     return label.replace("_", " ").title()
 
 
+def _archive_lookup_key(label: str | None) -> str | None:
+    if not label:
+        return None
+    return _display_hasta_name(label).lower()
+
+
 def _format_detection_name(label: str | None) -> str:
     if not label:
         return "No hand detected"
@@ -1094,11 +1100,18 @@ class MudraArchiveTab(QWidget):
     def set_hold_label(self, label: str | None) -> None:
         del label
 
+    def has_entry(self, label: str | None) -> bool:
+        lookup_key = _archive_lookup_key(label)
+        if lookup_key is None:
+            return False
+        return lookup_key in self.entries
+
     def focus_entry(self, label: str | None) -> None:
-        if not label:
+        lookup_key = _archive_lookup_key(label)
+        if lookup_key is None:
             return
 
-        card = self.cards.get(label.lower())
+        card = self.cards.get(lookup_key)
         if card is None:
             return
 
@@ -1123,6 +1136,9 @@ class AppWindow(QMainWindow):
 
     def handle_hold_pause(self, label: str | None) -> None:
         self.workspace_tab.set_hold_label(label)
+        if not self.workspace_tab.has_entry(label):
+            return
+
         self.tabs.setCurrentWidget(self.workspace_tab)
         self.workspace_tab.focus_entry(label)
 
