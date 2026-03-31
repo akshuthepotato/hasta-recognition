@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import queue
-import math
-import random
 import sys
 import time
 from collections.abc import Callable
@@ -191,7 +189,7 @@ def _format_interpretation_label(asset_path: Path) -> str:
 
 MUDRA_PERFORMER_DESCRIPTIONS: dict[str, str] = {
     "Pathaakam": "Performed by Nikita, Singapore Adavu.",
-    "Hamsasyam": "Performed by Nikita, Singapore Adavu.",
+    "Hamsasyam": "Performed by Swathi, Singapore Adavu.",
 }
 
 
@@ -800,8 +798,9 @@ class InterpretationStage(QFrame):
         self.on_interpretation_click = on_interpretation_click
         self.source_pixmap = QPixmap(str(entry.sketch_path))
         self.buttons: list[QPushButton] = []
+        self._button_columns = 2
 
-        self.setMinimumHeight(420)
+        self.setMinimumHeight(360)
         self.setStyleSheet(
             f"""
             QFrame {{
@@ -816,179 +815,100 @@ class InterpretationStage(QFrame):
             QPushButton {{
                 background: #f0dfbc;
                 color: #51331b;
-                border: 1px solid #c8ab78;
+                border: 2px solid #c8ab78;
                 border-radius: 14px;
-                padding: 8px 18px;
+                padding: 10px 18px;
                 font-size: 13px;
                 font-weight: 700;
             }}
             QPushButton:hover {{
                 background: #f7e8c9;
+                border-color: #b9935b;
             }}
             """
         )
 
-        self.sketch_label = QLabel(self)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(24)
+
+        sketch_frame = QFrame(self)
+        sketch_frame.setStyleSheet("background: transparent;")
+        sketch_layout = QVBoxLayout(sketch_frame)
+        sketch_layout.setContentsMargins(0, 0, 0, 0)
+        sketch_layout.setSpacing(0)
+
+        self.sketch_label = QLabel(sketch_frame)
         self.sketch_label.setAlignment(Qt.AlignCenter)
+        self.sketch_label.setMinimumSize(220, 300)
+        sketch_layout.addWidget(self.sketch_label, stretch=1)
+        layout.addWidget(sketch_frame, stretch=3)
+
+        button_frame = QFrame(self)
+        button_frame.setObjectName("interpretationButtonsPanel")
+        button_frame.setStyleSheet(
+            """
+            QFrame#interpretationButtonsPanel {
+                background: transparent;
+                border: none;
+            }
+            """
+        )
+        button_layout = QVBoxLayout(button_frame)
+        button_layout.setContentsMargins(18, 18, 18, 18)
+        button_layout.setSpacing(14)
+
+        button_heading = QLabel("Expanded meanings", button_frame)
+        button_heading.setStyleSheet(
+            f"font-size: 18px; font-weight: 700; color: {INK};"
+        )
+        button_layout.addWidget(button_heading)
+
+        self.button_grid = QGridLayout()
+        self.button_grid.setContentsMargins(0, 0, 0, 0)
+        self.button_grid.setHorizontalSpacing(12)
+        self.button_grid.setVerticalSpacing(12)
+        button_layout.addLayout(self.button_grid)
+        button_layout.addStretch(1)
+        layout.addWidget(button_frame, stretch=2)
 
         if self.source_pixmap.isNull():
             self.sketch_label.setText("Sketch unavailable")
+        else:
+            self._update_sketch_pixmap()
 
-        for interpretation in entry.interpretations:
+        for index, interpretation in enumerate(entry.interpretations):
             button = QPushButton(interpretation.label.lower(), self)
+            button.setCursor(Qt.PointingHandCursor)
+            button.setMinimumHeight(44)
             button.clicked.connect(
                 lambda _checked=False, mudra=entry, item=interpretation: self.on_interpretation_click(
                     mudra,
                     item,
                 )
             )
-            button.adjustSize()
+            row = index // self._button_columns
+            column = index % self._button_columns
+            self.button_grid.addWidget(button, row, column)
             self.buttons.append(button)
+
+        for column in range(self._button_columns):
+            self.button_grid.setColumnStretch(column, 1)
 
     def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)
-        self._layout_stage()
+        self._update_sketch_pixmap()
 
-    def _layout_stage(self) -> None:
-        stage_width = max(self.width(), 1)
-        stage_height = max(self.height(), 1)
-        cluster_width = min(stage_width, 540)
-        cluster_height = min(stage_height, 420)
-        cluster_left = int((stage_width - cluster_width) / 2)
-        cluster_top = int((stage_height - cluster_height) / 2)
-        hand_box = (
-            0.5,
-            0.58,
-            0.33,
-            1.02,
-        )
-
-        hand_center_x, hand_center_y, hand_width_ratio, hand_height_ratio = hand_box
-        hand_width = int(cluster_width * hand_width_ratio)
-        hand_height = int(cluster_height * hand_height_ratio)
-        hand_x = int(cluster_left + cluster_width * hand_center_x - hand_width / 2)
-        hand_y = int(cluster_top + cluster_height * hand_center_y - hand_height / 2)
-        self.sketch_label.setGeometry(hand_x, hand_y, hand_width, hand_height)
-
-        if not self.source_pixmap.isNull():
-            scaled = self.source_pixmap.scaled(
-                self.sketch_label.size(),
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation,
-            )
-            self.sketch_label.setPixmap(scaled)
-
-        self._arrange_buttons(
-            cluster_left=cluster_left,
-            cluster_top=cluster_top,
-            cluster_width=cluster_width,
-            cluster_height=cluster_height,
-            hand_rect=(hand_x, hand_y, hand_width, hand_height),
-        )
-
-    def _arrange_buttons(
-        self,
-        cluster_left: int,
-        cluster_top: int,
-        cluster_width: int,
-        cluster_height: int,
-        hand_rect: tuple[int, int, int, int],
-    ) -> None:
-        if not self.buttons:
+    def _update_sketch_pixmap(self) -> None:
+        if self.source_pixmap.isNull():
             return
 
-        center_x = cluster_left + cluster_width / 2
-        center_y = cluster_top + cluster_height * 0.50
-        hand_x, hand_y, hand_width, hand_height = hand_rect
-        hand_left = hand_x + hand_width * 0.18
-        hand_top = hand_y + hand_height * 0.08
-        hand_right = hand_x + hand_width * 0.82
-        hand_bottom = hand_y + hand_height * 0.72
-        margin = 10
-
-        occupied: list[tuple[int, int, int, int]] = []
-        rng = random.Random(f"{self.entry.name}:{len(self.buttons)}")
-        base_angle = rng.uniform(0.0, 2.0 * math.pi)
-        angle_step = (2.0 * math.pi) / len(self.buttons)
-
-        for index, button in enumerate(self.buttons):
-            button.adjustSize()
-            placed = False
-            preferred_angle = base_angle + index * angle_step
-
-            for ring in range(7):
-                radius_x = cluster_width * (0.26 + ring * 0.045)
-                radius_y = cluster_height * (0.22 + ring * 0.035)
-                for offset_index in range(16):
-                    offset = ((offset_index + 1) // 2) * 0.18
-                    if offset_index % 2 == 1:
-                        offset *= -1
-                    angle = preferred_angle + offset + rng.uniform(-0.035, 0.035)
-                    x = int(center_x + radius_x * math.cos(angle) - button.width() / 2)
-                    y = int(center_y + radius_y * math.sin(angle) - button.height() / 2)
-                    rect = (x, y, button.width(), button.height())
-                    if not self._rect_within_cluster(
-                        rect, cluster_left, cluster_top, cluster_width, cluster_height, margin
-                    ):
-                        continue
-                    if self._rect_intersects(
-                        rect,
-                        (
-                            int(hand_left),
-                            int(hand_top),
-                            int(hand_right - hand_left),
-                            int(hand_bottom - hand_top),
-                        ),
-                        padding=12,
-                    ):
-                        continue
-                    if any(self._rect_intersects(rect, other, padding=8) for other in occupied):
-                        continue
-
-                    button.move(x, y)
-                    occupied.append(rect)
-                    placed = True
-                    break
-                if placed:
-                    break
-
-            if not placed:
-                x = cluster_left + margin
-                y = cluster_top + margin + index * (button.height() + 6)
-                button.move(x, y)
-                occupied.append((x, y, button.width(), button.height()))
-
-    @staticmethod
-    def _rect_within_cluster(
-        rect: tuple[int, int, int, int],
-        cluster_left: int,
-        cluster_top: int,
-        cluster_width: int,
-        cluster_height: int,
-        margin: int,
-    ) -> bool:
-        x, y, width, height = rect
-        return (
-            x >= cluster_left + margin
-            and y >= cluster_top + margin
-            and x + width <= cluster_left + cluster_width - margin
-            and y + height <= cluster_top + cluster_height - margin
+        scaled = self.source_pixmap.scaled(
+            self.sketch_label.size(),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation,
         )
-
-    @staticmethod
-    def _rect_intersects(
-        rect_a: tuple[int, int, int, int],
-        rect_b: tuple[int, int, int, int],
-        padding: int = 0,
-    ) -> bool:
-        ax, ay, aw, ah = rect_a
-        bx, by, bw, bh = rect_b
-        return not (
-            ax + aw + padding <= bx
-            or bx + bw + padding <= ax
-            or ay + ah + padding <= by
-            or by + bh + padding <= ay
-        )
+        self.sketch_label.setPixmap(scaled)
 
 
 class MudraCard(QFrame):
