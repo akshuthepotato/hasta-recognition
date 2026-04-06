@@ -149,7 +149,7 @@
   "test_size": 0.2,
   "random_state": 42,
   "augment_copies": 10,
-  "rotation_degrees": 90.0,
+  "rotation_degrees": 180.0,
   "translation_range": 0.03,
   "scale_range": 0.08,
   "jitter_std": 0.01

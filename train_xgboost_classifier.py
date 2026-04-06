@@ -166,6 +166,22 @@ def build_model(num_classes: int, random_state: int):
     return XGBClassifier(
         objective="multi:softprob",
         num_class=num_classes,
+        n_estimators=100,
+        max_depth=4,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        min_child_weight=5,
+        gamma=0.1,
+        tree_method="hist",
+        eval_metric="mlogloss",
+        random_state=random_state,
+        n_jobs=0,
+    )
+
+    return XGBClassifier(
+        objective="multi:softprob",
+        num_class=num_classes,
         n_estimators=300,
         max_depth=8,
         learning_rate=0.05,
