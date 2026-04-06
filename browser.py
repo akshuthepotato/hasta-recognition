@@ -69,38 +69,18 @@ PAGE_CONTENT = {
     "archive": [
         {
             "name": "Pathaakam",
-            "sketch": "pathaka_sketch.png",
-            "interpretations": [
-                "up & down",
-                "waving",
-                "wind",
-                "mirror",
-                "slapping",
-                "cutting",
-                "applying makeup",
-                "calling",
-                "slicing",
-            ],
-            "video": "pathaka_mirror.MOV",
+            "asset_dir": "PATHAAKAM",
+            "sketch": "sketch.png",
+            "video": "MIRROR.MOV",
             "cta": "Explore Pathaakam",
         },
         {
             "name": "Hamsasyam",
-            "sketch": "pathaka_sketch.png",
-            "interpretations": [
-                "up & down",
-                "waving",
-                "wind",
-                "mirror",
-                "slapping",
-                "cutting",
-                "applying makeup",
-                "calling",
-                "slicing",
-            ],
-            "video": "pathaka_mirror.MOV",
-            "cta": "Explore Pathaakam",
-        }
+            "asset_dir": "hamsasyam",
+            "sketch": "hamsasyam sketch.png",
+            "video": "saying_ok.MOV",
+            "cta": "Explore Hamsasyam",
+        },
     ],
 }
 
@@ -121,6 +101,60 @@ def _browser_visible_label(label: str | None) -> str | None:
     if label in (None, "", "uncertain"):
         return None
     return label
+
+
+def _asset_path(*parts: str) -> str:
+    return str(Path(*parts).as_posix())
+
+
+def _interpretation_label(filename: str) -> str:
+    stem = Path(filename).stem
+    return stem.replace("_", " ").strip().title()
+
+
+def _archive_item_with_assets(item: dict[str, object]) -> dict[str, object]:
+    asset_dir = Path(str(item["asset_dir"]))
+    asset_root = ASSETS_DIR / asset_dir
+
+    sketch_value = item.get("sketch")
+    sketch_name = None
+    if sketch_value:
+        candidate = asset_root / str(sketch_value)
+        if candidate.is_file():
+            sketch_name = _asset_path(str(asset_dir), str(sketch_value))
+
+    interpretation_files = sorted(
+        path.name
+        for path in asset_root.iterdir()
+        if path.is_file()
+        and path.suffix.lower() in {".mov", ".mp4", ".m4v", ".webm"}
+    )
+    video_value = item.get("video")
+    video_name = None
+    if video_value:
+        candidate = asset_root / str(video_value)
+        if candidate.is_file():
+            video_name = _asset_path(str(asset_dir), str(video_value))
+    if video_name is None and interpretation_files:
+        video_name = _asset_path(str(asset_dir), interpretation_files[0])
+
+    media_items = [
+        {
+            "label": _interpretation_label(name),
+            "path": _asset_path(str(asset_dir), name),
+            "selected": _asset_path(str(asset_dir), name) == video_name,
+        }
+        for name in interpretation_files
+    ]
+
+    return {
+        **item,
+        "slug": _archive_slug(str(item["name"])),
+        "sketch": sketch_name,
+        "video": video_name,
+        "interpretations": [media["label"] for media in media_items],
+        "media_items": media_items,
+    }
 
 
 HTML_TEMPLATE = """<!doctype html>
@@ -337,13 +371,16 @@ HTML_TEMPLATE = """<!doctype html>
         border-radius: 28px;
         border: 1px solid rgba(63, 36, 14, 0.16);
         background: #1c150f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .feed-stage img {
         display: block;
         width: 100%;
-        aspect-ratio: 4 / 3;
-        object-fit: cover;
+        height: auto;
+        object-fit: contain;
       }
 
       .feed-note {
@@ -461,6 +498,15 @@ HTML_TEMPLATE = """<!doctype html>
         align-items: start;
       }
 
+      .archive-heading {
+        grid-column: 1 / -1;
+      }
+
+      .archive-heading h2 {
+        margin-top: 14px;
+        font-size: clamp(2.4rem, 5vw, 4rem);
+      }
+
       .archive-sketch {
         display: grid;
         gap: 14px;
@@ -482,16 +528,17 @@ HTML_TEMPLATE = """<!doctype html>
         object-fit: contain;
       }
 
-      .archive-copy h2 {
-        margin-top: 14px;
-        font-size: clamp(2.4rem, 5vw, 4rem);
+      .archive-copy p {
+        margin: 16px 0 0;
+        color: var(--ink-soft);
+        line-height: 1.8;
+        font-size: 1rem;
       }
 
       .chip-grid {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
-        margin-top: 20px;
       }
 
       .chip {
@@ -501,6 +548,23 @@ HTML_TEMPLATE = """<!doctype html>
         border: 1px solid rgba(82, 51, 24, 0.12);
         color: var(--ink-soft);
         font-size: 0.95rem;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease;
+      }
+
+      button.chip {
+        font: inherit;
+      }
+
+      .chip:hover {
+        transform: translateY(-1px);
+        border-color: rgba(82, 51, 24, 0.28);
+      }
+
+      .chip.is-active {
+        background: var(--button);
+        color: var(--button-text);
+        border-color: rgba(53, 26, 8, 0.3);
       }
 
       .interpretation-frame {
@@ -516,13 +580,17 @@ HTML_TEMPLATE = """<!doctype html>
         border-radius: 22px;
         overflow: hidden;
         background: #704024;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .interpretation-media video {
         display: block;
         width: 100%;
-        aspect-ratio: 4 / 5;
-        object-fit: cover;
+        height: auto;
+        max-height: 70vh;
+        object-fit: contain;
       }
 
       .archive-cta {
@@ -661,10 +729,15 @@ HTML_TEMPLATE = """<!doctype html>
       </section>
 
       <section class="section" id="archive">
-        <div class="section-mark">Interpretations</div>
+        <div class="section-mark">Hasta Archive</div>
         <div class="archive" style="margin-top: 18px;">
           {% for item in content.archive %}
           <article id="archive-{{ item.slug }}" class="archive-card">
+            <div class="archive-heading">
+              <h2>{{ item.name }}</h2>
+              <p>Browse the interpretation clips from the sketch column to switch the reference video shown here.</p>
+            </div>
+
             <div class="archive-sketch">
               <div class="archive-sketch-box">
                 {% if item.sketch %}
@@ -673,22 +746,27 @@ HTML_TEMPLATE = """<!doctype html>
                 <div>No sketch available</div>
                 {% endif %}
               </div>
+              <div class="chip-grid">
+                {% for media in item.media_items %}
+                <button
+                  type="button"
+                  class="chip{% if media.selected %} is-active{% endif %}"
+                  data-video-target="video-{{ item.slug }}"
+                  data-video-src="/media/{{ media.path }}"
+                >
+                  {{ media.label }}
+                </button>
+                {% endfor %}
+              </div>
               <a class="button archive-cta" href="#live">{{ item.cta }}</a>
             </div>
 
             <div class="archive-copy">
-              <div class="eyebrow">Hasta Archive</div>
-              <h2>{{ item.name }}</h2>
-              <div class="chip-grid">
-                {% for label in item.interpretations %}
-                <span class="chip">{{ label }}</span>
-                {% endfor %}
-              </div>
-
+              <div class="eyebrow">Interpretations</div>
               {% if item.video %}
               <div class="interpretation-frame">
                 <div class="interpretation-media">
-                  <video controls muted playsinline preload="metadata">
+                  <video id="video-{{ item.slug }}" controls muted playsinline preload="metadata">
                     <source src="/media/{{ item.video }}">
                   </video>
                 </div>
@@ -747,6 +825,40 @@ HTML_TEMPLATE = """<!doctype html>
         });
       }
 
+      function setupInterpretationChips() {
+        const chips = document.querySelectorAll("[data-video-target][data-video-src]");
+        for (const chip of chips) {
+          chip.addEventListener("click", () => {
+            const video = document.getElementById(chip.dataset.videoTarget);
+            if (!video) {
+              return;
+            }
+
+            const source = video.querySelector("source");
+            const nextSrc = chip.dataset.videoSrc;
+            if (!source || !nextSrc || source.getAttribute("src") === nextSrc) {
+                return;
+            }
+
+            source.setAttribute("src", nextSrc);
+            video.load();
+            const playPromise = video.play();
+            if (playPromise && typeof playPromise.catch === "function") {
+              playPromise.catch(() => {});
+            }
+
+            const chipGroup = chip.closest(".chip-grid");
+            if (!chipGroup) {
+              return;
+            }
+            for (const groupChip of chipGroup.querySelectorAll(".chip")) {
+              groupChip.classList.remove("is-active");
+            }
+            chip.classList.add("is-active");
+          });
+        }
+      }
+
       async function resumeFeed() {
         try {
           const response = await fetch("/resume", { method: "POST" });
@@ -765,6 +877,7 @@ HTML_TEMPLATE = """<!doctype html>
 
       liveFeed.addEventListener("click", resumeFeed);
       connectDetectionSocket();
+      setupInterpretationChips();
     </script>
   </body>
 </html>
@@ -1106,21 +1219,9 @@ def create_app(args: argparse.Namespace) -> Flask:
 
     @app.get("/")
     def index() -> str:
-        archive_items = []
-        for item in PAGE_CONTENT["archive"]:
-            sketch_name = item["sketch"] if (
-                ASSETS_DIR / item["sketch"]).exists() else None
-            video_name = item["video"] if (
-                ASSETS_DIR / item["video"]).exists() else None
-            archive_items.append(
-                {
-                    **item,
-                    "slug": _archive_slug(item["name"]),
-                    "sketch": sketch_name,
-                    "video": video_name,
-                }
-            )
-
+        archive_items = [
+            _archive_item_with_assets(item) for item in PAGE_CONTENT["archive"]
+        ]
         content = {**PAGE_CONTENT, "archive": archive_items}
         return render_template_string(
             HTML_TEMPLATE,

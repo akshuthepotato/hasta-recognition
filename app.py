@@ -447,9 +447,15 @@ class WebcamViewerTab(QWidget):
 
         if self.latest_result and self.latest_result.prediction is not None:
             prediction = self.latest_result.prediction
-            self.last_prediction_label = prediction.label
+            if prediction.label != "uncertain":
+                self.last_prediction_label = prediction.label
             progress, should_pause, detected_label = self.hold_sm.update(
                 prediction.label)
+            display_label = (
+                self.last_prediction_label
+                if prediction.label == "uncertain"
+                else prediction.label
+            )
 
             draw_hand_landmarks(frame, self.latest_result.result)
             draw_progress_circle(
@@ -460,7 +466,7 @@ class WebcamViewerTab(QWidget):
             )
             self.draw_overlay(frame, prediction.label, prediction.confidence, progress)
             self._update_signal_labels(
-                prediction.label,
+                display_label,
                 prediction.confidence,
                 progress,
                 should_pause,
