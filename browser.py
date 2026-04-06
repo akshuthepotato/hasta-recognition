@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import atexit
+import json
 import threading
 import time
 from collections.abc import Iterator
@@ -9,7 +10,8 @@ from pathlib import Path
 
 import cv2
 import mediapipe as mp
-from flask import Flask, Response, abort, jsonify, render_template_string, send_from_directory
+from flask import Flask, Response, abort, render_template_string, send_from_directory
+from flask_sock import Sock
 
 from main import (
     BaseOptions,
@@ -686,7 +688,7 @@ HTML_TEMPLATE = """<!doctype html>
               {% if item.video %}
               <div class="interpretation-frame">
                 <div class="interpretation-media">
-                  <video controls playsinline preload="metadata">
+                  <video controls muted playsinline preload="metadata">
                     <source src="/media/{{ item.video }}">
                   </video>
                 </div>
@@ -706,6 +708,45 @@ HTML_TEMPLATE = """<!doctype html>
       const statusViewer = document.getElementById("status-viewer");
       let lastScrolledArchive = null;
 
+      function applyDetectionState(state) {
+        statusLabel.textContent = state.current_label || "No hand detected";
+        statusConfidence.textContent = state.current_confidence || "--";
+        statusProgress.textContent = state.hold_progress || "0%";
+        statusViewer.textContent = state.paused ? "Paused" : "Live";
+        if (!state.archive_slug) {
+          return;
+        }
+        if (state.archive_slug === lastScrolledArchive) {
+          return;
+        }
+        const target = document.getElementById("archive-" + state.archive_slug);
+        if (!target) {
+          return;
+        }
+        lastScrolledArchive = state.archive_slug;
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function connectDetectionSocket() {
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const socket = new WebSocket(protocol + "://" + window.location.host + "/ws/state");
+
+        socket.addEventListener("message", (event) => {
+          try {
+            applyDetectionState(JSON.parse(event.data));
+          } catch (_error) {
+          }
+        });
+
+        socket.addEventListener("close", () => {
+          window.setTimeout(connectDetectionSocket, 1000);
+        });
+
+        socket.addEventListener("error", () => {
+          socket.close();
+        });
+      }
+
       async function resumeFeed() {
         try {
           const response = await fetch("/resume", { method: "POST" });
@@ -722,35 +763,8 @@ HTML_TEMPLATE = """<!doctype html>
         }
       }
 
-      async function syncDetectionState() {
-        try {
-          const response = await fetch("/state", { cache: "no-store" });
-          if (!response.ok) {
-            return;
-          }
-          const state = await response.json();
-          statusLabel.textContent = state.current_label || "No hand detected";
-          statusConfidence.textContent = state.current_confidence || "--";
-          statusProgress.textContent = state.hold_progress || "0%";
-          statusViewer.textContent = state.paused ? "Paused" : "Live";
-          if (!state.archive_slug) {
-            return;
-          }
-          if (state.archive_slug === lastScrolledArchive) {
-            return;
-          }
-          const target = document.getElementById("archive-" + state.archive_slug);
-          if (!target) {
-            return;
-          }
-          lastScrolledArchive = state.archive_slug;
-          target.scrollIntoView({ behavior: "smooth", block: "start" });
-        } catch (_error) {
-        }
-      }
-
       liveFeed.addEventListener("click", resumeFeed);
-      window.setInterval(syncDetectionState, 400);
+      connectDetectionSocket();
     </script>
   </body>
 </html>
@@ -791,6 +805,7 @@ class BrowserVideoFeed:
         self.current_label: str | None = None
         self.current_confidence: float | None = None
         self.current_progress = 0.0
+        self.state_revision = 0
 
         options = HandLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=str(model_path)),
@@ -807,6 +822,7 @@ class BrowserVideoFeed:
             if self.capture.isOpened():
                 self.capture.release()
             self.landmarker.close()
+            self.state_revision += 1
             self.state_changed.notify_all()
 
     def resume(self) -> None:
@@ -820,6 +836,7 @@ class BrowserVideoFeed:
             self.current_confidence = None
             self.current_progress = 0.0
             self.hold_sm.reset()
+            self.state_revision += 1
             self.state_changed.notify_all()
 
     def is_paused(self) -> bool:
@@ -833,36 +850,53 @@ class BrowserVideoFeed:
             self.state_changed.wait(timeout=timeout)
             return not self.paused
 
+    def _state_payload_unlocked(self) -> dict[str, str | bool | None]:
+        display_label = (
+            _display_hasta_name(_browser_visible_label(self.completed_label))
+            if _browser_visible_label(self.completed_label) is not None
+            else None
+        )
+        visible_current_label = _browser_visible_label(self.current_label)
+        current_label = (
+            _display_hasta_name(visible_current_label)
+            if visible_current_label is not None
+            else None
+        )
+        archive_slug = (
+            _archive_slug(display_label)
+            if display_label is not None
+            else None
+        )
+        return {
+            "paused": self.paused,
+            "completed_label": display_label,
+            "current_label": current_label,
+            "current_confidence": (
+                f"{self.current_confidence:.0%}"
+                if self.current_confidence is not None
+                else None
+            ),
+            "hold_progress": f"{self.current_progress:.0%}",
+            "archive_slug": archive_slug,
+        }
+
     def get_state(self) -> dict[str, str | bool | None]:
         with self.lock:
-            display_label = (
-                _display_hasta_name(_browser_visible_label(self.completed_label))
-                if _browser_visible_label(self.completed_label) is not None
-                else None
-            )
-            visible_current_label = _browser_visible_label(self.current_label)
-            current_label = (
-                _display_hasta_name(visible_current_label)
-                if visible_current_label is not None
-                else None
-            )
-            archive_slug = (
-                _archive_slug(display_label)
-                if display_label is not None
-                else None
-            )
-            return {
-                "paused": self.paused,
-                "completed_label": display_label,
-                "current_label": current_label,
-                "current_confidence": (
-                    f"{self.current_confidence:.0%}"
-                    if self.current_confidence is not None
-                    else None
-                ),
-                "hold_progress": f"{self.current_progress:.0%}",
-                "archive_slug": archive_slug,
-            }
+            return self._state_payload_unlocked()
+
+    def get_state_with_revision(self) -> tuple[int, dict[str, str | bool | None]]:
+        with self.lock:
+            return self.state_revision, self._state_payload_unlocked()
+
+    def wait_for_state_change(
+        self,
+        last_revision: int,
+        timeout: float = 15.0,
+    ) -> tuple[int, dict[str, str | bool | None]]:
+        with self.state_changed:
+            if self.state_revision == last_revision:
+                self.state_changed.wait(timeout=timeout)
+            return self.state_revision, self._state_payload_unlocked()
 
     def next_frame_bytes(self) -> bytes:
         with self.lock:
@@ -882,6 +916,8 @@ class BrowserVideoFeed:
                 self.last_frame_bytes = encoded.tobytes()
                 self.paused = True
                 self.pause_pending = False
+                self.state_revision += 1
+                self.state_changed.notify_all()
                 return self.last_frame_bytes
 
             ok, frame = self.capture.read()
@@ -932,6 +968,8 @@ class BrowserVideoFeed:
                 self.pause_pending = True
             elif not self.paused:
                 self.pause_pending = False
+            self.state_revision += 1
+            self.state_changed.notify_all()
             return frame_bytes
 
     @staticmethod
@@ -1051,6 +1089,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def create_app(args: argparse.Namespace) -> Flask:
     app = Flask(__name__)
+    sock = Sock(app)
     feed = BrowserVideoFeed(
         camera_id=args.camera_id,
         model_path=args.model_path,
@@ -1118,9 +1157,13 @@ def create_app(args: argparse.Namespace) -> Flask:
         feed.resume()
         return Response(status=204)
 
-    @app.get("/state")
-    def state():
-        return jsonify(feed.get_state())
+    @sock.route("/ws/state")
+    def state_socket(ws) -> None:
+        revision, state = feed.get_state_with_revision()
+        ws.send(json.dumps(state))
+        while True:
+            revision, state = feed.wait_for_state_change(revision)
+            ws.send(json.dumps(state))
 
     return app
 
