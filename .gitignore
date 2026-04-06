@@ -1,4 +1,6 @@
 data/
+data-bak/
+data-subsampled/
 .ipynb_checkpoints/
 __pycache__/
 assets/
