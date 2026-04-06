@@ -33,38 +33,25 @@ OVERLAY_LINE = (106, 88, 48)
 PAGE_CONTENT = {
     "hero": {
         "title": "Hasta Lab",
-        "subtitle": "A beginner friendly learning portal of single hand gestures and their expanded meanings.",
+        "intro": (
+            "A beginner friendly learning portal of single hand gestures and "
+            "their expanded meanings."
+        ),
         "body": (
-            "Bharatanatyam's single-hand gestures form a codified visual language through "
-            "which meaning is constructed, communicated, and embodied. This browser version "
-            "keeps the live recognition view while presenting the archive with the same warm, "
-            "museum-like tone from the reference designs."
+            "Bharatanatyam's single-hand gestures (Asamyuta Hastas) form a "
+            "codified visual language through which meaning is constructed, "
+            "communicated, and embodied. Traditionally, these gestures are "
+            "defined through Vinyogams, canonical descriptions that map each "
+            "hand form to a set of spiritual, mythological, or symbolic "
+            "associations."
         ),
     },
-    "about": [
-        {
-            "heading": "Background & Context",
-            "body": (
-                "Bharatanatyam learning today is often static, hierarchical, and inaccessible "
-                "outside the classroom. Hastas are usually taught through 2D references or "
-                "correction-based pedagogy, with little room for self-paced interpretation."
-            ),
-        },
-        {
-            "heading": "Hasta Lab",
-            "body": (
-                "This interface detects a user's hand gesture, helps them correct it in real "
-                "time, and then invites them to explore its expanded meanings through sketches, "
-                "reference media, and an interpretation archive."
-            ),
-        },
-    ],
-    "steps": [
+    "how_to": [
         "Approach the interface and perform a hasta.",
-        "Wait for the system to detect the gesture and show visual feedback.",
-        "Explore expanded meanings of the recognised hand gesture.",
-        "Review the mirrored demonstration and reference material.",
-        "Return to the archive and continue through the collection.",
+        "Wait for the system to detect the gesture and give you visual feedback.",
+        "Explore performing all the expanded meanings of the hand gesture.",
+        "Explore the opportunity to add your own interpretation of the hand gesture.",
+        "The interface then unfolds into a living archive of interpretations.",
     ],
     "archive": [
         {
@@ -72,14 +59,14 @@ PAGE_CONTENT = {
             "asset_dir": "PATHAAKAM",
             "sketch": "sketch.png",
             "video": "MIRROR.MOV",
-            "cta": "Explore Pathaakam",
+            "cta": "Back to Home Page",
         },
         {
             "name": "Hamsasyam",
             "asset_dir": "hamsasyam",
             "sketch": "hamsasyam sketch.png",
             "video": "saying_ok.MOV",
-            "cta": "Explore Hamsasyam",
+            "cta": "Back to Home Page",
         },
     ],
 }
@@ -157,25 +144,282 @@ def _archive_item_with_assets(item: dict[str, object]) -> dict[str, object]:
     }
 
 
+HOW_TO_TEMPLATE = """<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>How To Use | Hasta Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --ink: #4d2f1e;
+        --ink-soft: #755845;
+        --panel: rgba(250, 243, 233, 0.72);
+        --border: rgba(123, 86, 56, 0.18);
+        --button: #d8a07a;
+        --button-text: #4d2f1e;
+        --cta-height: 56px;
+        --cta-radius: 999px;
+        --cta-font-size: 1rem;
+        --cta-letter-spacing: 0.04em;
+        --shadow: 0 24px 80px rgba(93, 60, 34, 0.14);
+        --pastel-yellow: rgba(247, 228, 168, 0.4);
+        --pastel-green: rgba(194, 214, 187, 0.32);
+        --pastel-orange: rgba(239, 196, 151, 0.32);
+        --pastel-pink: rgba(232, 194, 193, 0.28);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 14%, var(--pastel-yellow), transparent 24%),
+          radial-gradient(circle at 84% 18%, var(--pastel-pink), transparent 26%),
+          radial-gradient(circle at 18% 78%, var(--pastel-green), transparent 24%),
+          radial-gradient(circle at 88% 82%, var(--pastel-orange), transparent 28%),
+          linear-gradient(180deg, #f7eddf 0%, #f0e1cd 52%, #ebd9c4 100%);
+        font-family: "Jura", sans-serif;
+      }
+
+      .shell {
+        width: min(980px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 24px 0 64px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 20px;
+      }
+
+      .brand {
+        font-size: 1rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .nav {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(170px, 1fr));
+        gap: 12px;
+      }
+
+      .nav a,
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: var(--cta-height);
+        padding: 0 24px;
+        border-radius: var(--cta-radius);
+        border: 1px solid rgba(53, 26, 8, 0.18);
+        background: rgba(255, 247, 223, 0.7);
+        color: var(--ink);
+        text-transform: uppercase;
+        letter-spacing: var(--cta-letter-spacing);
+        font-size: var(--cta-font-size);
+        text-align: center;
+        text-decoration: none;
+      }
+
+      .button {
+        background: var(--button);
+        color: var(--button-text);
+        box-shadow: 0 14px 30px rgba(59, 30, 11, 0.18);
+      }
+
+      .page-card {
+        padding: 28px;
+        border-radius: 34px;
+        border: 1px solid var(--border);
+        background:
+          linear-gradient(180deg, rgba(255, 246, 230, 0.9), rgba(241, 227, 204, 0.76)),
+          var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(6px);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--ink-soft);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 18px;
+        height: 2px;
+        background: currentColor;
+      }
+
+      h1 {
+        margin: 16px 0 0;
+        font-size: clamp(2.5rem, 7vw, 4.6rem);
+        line-height: 1;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .lede {
+        margin: 18px 0 0;
+        max-width: 46rem;
+        color: var(--ink-soft);
+        line-height: 1.7;
+        font-size: 1rem;
+      }
+
+      .steps {
+        display: grid;
+        gap: 14px;
+        margin-top: 28px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 16px;
+        align-items: start;
+        padding: 20px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255, 248, 237, 0.72);
+      }
+
+      .step-index {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        background: rgba(60, 30, 11, 0.08);
+        border: 1px solid rgba(60, 30, 11, 0.12);
+        font-size: 1.2rem;
+      }
+
+      .step p {
+        margin: 0;
+        color: var(--ink-soft);
+        line-height: 1.7;
+        font-size: 1rem;
+      }
+
+      .page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 28px;
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          width: min(100vw - 20px, 980px);
+          padding-top: 16px;
+        }
+
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .nav {
+          width: 100%;
+          grid-template-columns: 1fr;
+        }
+
+        .page-card {
+          padding: 22px;
+          border-radius: 28px;
+        }
+
+        .step {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">Hasta Lab</div>
+        <nav class="nav">
+          <a href="/">Live Feed</a>
+          <a href="/how-to">How To Use</a>
+          <a href="/#archive">Archive</a>
+        </nav>
+      </header>
+
+      <main class="page-card">
+        <div class="eyebrow">How To Use</div>
+        <h1>Learn The Flow</h1>
+        <p class="lede">
+          Hasta Lab invites you to move from gesture to meaning, then from meaning to your own interpretation.
+        </p>
+
+        <section class="steps">
+          {% for step in content.how_to %}
+          <article class="step">
+            <div class="step-index">{{ loop.index }}</div>
+            <p>{{ step }}</p>
+          </article>
+          {% endfor %}
+        </section>
+
+        <div class="page-actions">
+          <a class="button" href="/">Back to Home Page</a>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
+"""
+
+
 HTML_TEMPLATE = """<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hasta Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        --paper: #f4e7c3;
-        --paper-soft: #efe0b6;
-        --paper-deep: #e5cf94;
-        --ink: #4d2918;
-        --ink-soft: #71513b;
-        --panel: rgba(253, 244, 216, 0.84);
-        --panel-strong: rgba(248, 231, 188, 0.92);
-        --border: rgba(129, 86, 46, 0.24);
-        --button: #3b1e0b;
-        --button-text: #f8edcf;
-        --shadow: 0 24px 80px rgba(80, 48, 18, 0.18);
+        --paper: #f3e6d2;
+        --paper-soft: rgba(244, 230, 208, 0.9);
+        --paper-deep: #dcc2a0;
+        --ink: #4d2f1e;
+        --ink-soft: #755845;
+        --panel: rgba(250, 243, 233, 0.68);
+        --panel-strong: rgba(247, 236, 221, 0.82);
+        --border: rgba(123, 86, 56, 0.18);
+        --button: #d8a07a;
+        --button-text: #4d2f1e;
+        --cta-height: 56px;
+        --cta-radius: 999px;
+        --cta-font-size: 1rem;
+        --cta-letter-spacing: 0.04em;
+        --shadow: 0 24px 80px rgba(93, 60, 34, 0.14);
+        --pastel-yellow: rgba(247, 228, 168, 0.4);
+        --pastel-green: rgba(194, 214, 187, 0.32);
+        --pastel-orange: rgba(239, 196, 151, 0.32);
+        --pastel-pink: rgba(232, 194, 193, 0.28);
+        --pastel-brown: rgba(188, 157, 130, 0.24);
       }
 
       * {
@@ -190,10 +434,12 @@ HTML_TEMPLATE = """<!doctype html>
         margin: 0;
         color: var(--ink);
         background:
-          radial-gradient(circle at top, rgba(255, 244, 204, 0.75), transparent 28%),
-          radial-gradient(circle at bottom left, rgba(221, 182, 98, 0.18), transparent 26%),
-          linear-gradient(180deg, #f8ebc8 0%, #f3e4bb 38%, #f1ddb0 100%);
-        font-family: Georgia, "Times New Roman", serif;
+          radial-gradient(circle at 12% 14%, var(--pastel-yellow), transparent 24%),
+          radial-gradient(circle at 84% 18%, var(--pastel-pink), transparent 26%),
+          radial-gradient(circle at 18% 78%, var(--pastel-green), transparent 24%),
+          radial-gradient(circle at 88% 82%, var(--pastel-orange), transparent 28%),
+          linear-gradient(180deg, #f7eddf 0%, #f0e1cd 52%, #ebd9c4 100%);
+        font-family: "Jura", sans-serif;
       }
 
       body::before {
@@ -201,11 +447,18 @@ HTML_TEMPLATE = """<!doctype html>
         position: fixed;
         inset: 0;
         pointer-events: none;
-        opacity: 0.2;
+        opacity: 0.15;
         background:
           radial-gradient(circle at 20% 20%, rgba(120, 86, 39, 0.08), transparent 18%),
-          radial-gradient(circle at 80% 0%, rgba(120, 86, 39, 0.07), transparent 20%),
-          radial-gradient(circle at 50% 100%, rgba(120, 86, 39, 0.08), transparent 22%);
+          radial-gradient(circle at 80% 0%, rgba(120, 86, 39, 0.06), transparent 20%),
+          radial-gradient(circle at 50% 100%, rgba(120, 86, 39, 0.08), transparent 22%),
+          repeating-linear-gradient(
+            135deg,
+            rgba(116, 85, 58, 0.035) 0,
+            rgba(116, 85, 58, 0.035) 2px,
+            transparent 2px,
+            transparent 9px
+          );
         mix-blend-mode: multiply;
       }
 
@@ -215,9 +468,9 @@ HTML_TEMPLATE = """<!doctype html>
       }
 
       .shell {
-        width: min(1120px, calc(100vw - 32px));
+        width: min(1280px, calc(100vw - 32px));
         margin: 0 auto;
-        padding: 24px 0 80px;
+        padding: 20px 0 80px;
         position: relative;
       }
 
@@ -237,30 +490,37 @@ HTML_TEMPLATE = """<!doctype html>
       }
 
       .nav {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(170px, 1fr));
         gap: 12px;
-        font-size: 0.95rem;
       }
 
       .nav a {
-        padding: 10px 14px;
-        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: var(--cta-height);
+        padding: 0 24px;
+        border-radius: var(--cta-radius);
         background: rgba(255, 247, 223, 0.6);
         border: 1px solid var(--border);
+        font-size: var(--cta-font-size);
+        letter-spacing: var(--cta-letter-spacing);
+        text-transform: uppercase;
+        text-align: center;
       }
 
       .hero {
         display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-        gap: 28px;
+        grid-template-columns: 1fr;
+        gap: 20px;
         align-items: stretch;
-        padding: 28px 0 44px;
+        min-height: auto;
+        padding: 8px 0 32px;
       }
 
       .hero-copy,
       .hero-feed,
-      .section-panel,
       .archive-card,
       .interpretation-frame {
         backdrop-filter: blur(6px);
@@ -270,11 +530,15 @@ HTML_TEMPLATE = """<!doctype html>
       }
 
       .hero-copy {
-        border-radius: 36px;
-        padding: 36px;
+        border-radius: 34px;
+        padding: 24px 28px;
         background:
-          linear-gradient(180deg, rgba(255, 248, 227, 0.94), rgba(243, 225, 177, 0.84)),
+          linear-gradient(180deg, rgba(255, 246, 230, 0.9), rgba(241, 227, 204, 0.76)),
           var(--panel);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 10px 18px;
       }
 
       .eyebrow,
@@ -301,20 +565,22 @@ HTML_TEMPLATE = """<!doctype html>
       h3 {
         margin: 0;
         font-weight: 600;
-        line-height: 0.92;
+        line-height: 0.98;
       }
 
       h1 {
-        margin-top: 18px;
-        font-size: clamp(4.2rem, 9vw, 7.4rem);
+        margin-top: 0;
+        font-size: clamp(2.8rem, 6vw, 5.6rem);
         text-transform: uppercase;
+        letter-spacing: 0.035em;
+        overflow-wrap: anywhere;
       }
 
-      .hero-copy p {
-        max-width: 34rem;
-        margin: 20px 0 0;
-        font-size: 1.08rem;
-        line-height: 1.75;
+      .hero-subtitle {
+        margin: 0;
+        max-width: none;
+        font-size: 1rem;
+        line-height: 1.65;
         color: var(--ink-soft);
       }
 
@@ -322,86 +588,75 @@ HTML_TEMPLATE = """<!doctype html>
         display: flex;
         flex-wrap: wrap;
         gap: 14px;
-        margin-top: 28px;
+        margin-top: 0;
       }
 
       .button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 56px;
+        min-height: var(--cta-height);
         padding: 0 26px;
-        border-radius: 18px;
+        border-radius: var(--cta-radius);
         border: 1px solid rgba(53, 26, 8, 0.22);
         background: var(--button);
         color: var(--button-text);
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        font-size: 1rem;
+        letter-spacing: var(--cta-letter-spacing);
+        font-size: var(--cta-font-size);
+        text-align: center;
         box-shadow: 0 14px 30px rgba(59, 30, 11, 0.18);
       }
 
       .button.secondary {
-        background: rgba(255, 247, 223, 0.72);
+        background: rgba(216, 160, 122, 0.58);
         color: var(--ink);
       }
 
       .hero-feed {
         border-radius: 36px;
-        padding: 18px;
+        padding: 16px;
         background:
-          linear-gradient(180deg, rgba(90, 59, 32, 0.18), rgba(246, 232, 195, 0.88)),
+          linear-gradient(180deg, rgba(141, 101, 67, 0.16), rgba(247, 238, 227, 0.84)),
           var(--panel-strong);
-      }
-
-      .hero-feed-head {
         display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 8px 8px 18px;
-        color: var(--ink-soft);
-        font-size: 0.9rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
+        flex-direction: column;
       }
 
       .feed-stage {
         position: relative;
         overflow: hidden;
-        border-radius: 28px;
+        border-radius: 30px;
         border: 1px solid rgba(63, 36, 14, 0.16);
         background: #1c150f;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex: 1;
+        min-height: 72vh;
       }
 
       .feed-stage img {
         display: block;
         width: 100%;
-        height: auto;
-        object-fit: contain;
-      }
-
-      .feed-note {
-        margin: 16px 8px 4px;
-        font-size: 0.98rem;
-        line-height: 1.65;
-        color: var(--ink-soft);
+        height: 100%;
+        object-fit: cover;
       }
 
       .feed-status {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
-        margin: 18px 4px 2px;
+        margin: 14px 4px 2px;
       }
 
       .status-card {
-        padding: 14px 16px;
+        padding: 13px 14px;
         border-radius: 18px;
         border: 1px solid rgba(82, 51, 24, 0.12);
-        background: rgba(255, 247, 223, 0.7);
+        background:
+          linear-gradient(180deg, rgba(255, 248, 239, 0.72), rgba(246, 233, 214, 0.7)),
+          rgba(255, 247, 223, 0.66);
       }
 
       .status-label {
@@ -419,69 +674,7 @@ HTML_TEMPLATE = """<!doctype html>
       }
 
       .section {
-        padding: 28px 0;
-      }
-
-      .section-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 20px;
-      }
-
-      .section-panel {
-        border-radius: 28px;
-        padding: 28px;
-      }
-
-      .section-panel h3 {
-        margin-top: 14px;
-        font-size: clamp(1.8rem, 4vw, 2.8rem);
-      }
-
-      .section-panel p {
-        margin: 16px 0 0;
-        color: var(--ink-soft);
-        line-height: 1.8;
-        font-size: 1rem;
-      }
-
-      .steps {
-        display: grid;
-        gap: 14px;
-      }
-
-      .step {
-        display: grid;
-        grid-template-columns: 86px 1fr;
-        gap: 18px;
-        align-items: center;
-        padding: 18px 22px;
-        border-radius: 24px;
-        border: 1px solid var(--border);
-        background: linear-gradient(90deg, rgba(255, 233, 196, 0.86), rgba(252, 246, 227, 0.64));
-        box-shadow: var(--shadow);
-      }
-
-      .step:nth-child(2n) {
-        background: linear-gradient(90deg, rgba(241, 211, 165, 0.78), rgba(252, 240, 216, 0.64));
-      }
-
-      .step-index {
-        width: 64px;
-        height: 64px;
-        border-radius: 18px;
-        display: grid;
-        place-items: center;
-        background: rgba(60, 30, 11, 0.08);
-        border: 1px solid rgba(60, 30, 11, 0.12);
-        font-size: 1.6rem;
-      }
-
-      .step p {
-        margin: 0;
-        font-size: 1rem;
-        line-height: 1.7;
-        color: var(--ink-soft);
+        padding: 18px 0 28px;
       }
 
       .archive {
@@ -491,10 +684,10 @@ HTML_TEMPLATE = """<!doctype html>
 
       .archive-card {
         border-radius: 32px;
-        padding: 28px;
+        padding: 24px;
         display: grid;
         grid-template-columns: minmax(260px, 360px) 1fr;
-        gap: 28px;
+        gap: 24px;
         align-items: start;
       }
 
@@ -503,8 +696,8 @@ HTML_TEMPLATE = """<!doctype html>
       }
 
       .archive-heading h2 {
-        margin-top: 14px;
-        font-size: clamp(2.4rem, 5vw, 4rem);
+        margin-top: 12px;
+        font-size: clamp(2.2rem, 4.4vw, 3.6rem);
       }
 
       .archive-sketch {
@@ -529,10 +722,10 @@ HTML_TEMPLATE = """<!doctype html>
       }
 
       .archive-copy p {
-        margin: 16px 0 0;
+        margin: 14px 0 0;
         color: var(--ink-soft);
-        line-height: 1.8;
-        font-size: 1rem;
+        line-height: 1.65;
+        font-size: 0.96rem;
       }
 
       .chip-grid {
@@ -568,11 +761,11 @@ HTML_TEMPLATE = """<!doctype html>
       }
 
       .interpretation-frame {
-        margin-top: 24px;
+        margin-top: 16px;
         border-radius: 32px;
         padding: 18px;
         background:
-          linear-gradient(180deg, rgba(201, 148, 84, 0.22), rgba(255, 245, 220, 0.88)),
+          linear-gradient(180deg, rgba(221, 183, 146, 0.2), rgba(255, 247, 234, 0.84)),
           var(--panel-strong);
       }
 
@@ -598,8 +791,6 @@ HTML_TEMPLATE = """<!doctype html>
       }
 
       @media (max-width: 900px) {
-        .hero,
-        .section-grid,
         .archive-card {
           grid-template-columns: 1fr;
         }
@@ -610,7 +801,6 @@ HTML_TEMPLATE = """<!doctype html>
 
         .hero-copy,
         .hero-feed,
-        .section-panel,
         .archive-card {
           border-radius: 28px;
         }
@@ -624,25 +814,44 @@ HTML_TEMPLATE = """<!doctype html>
           flex-direction: column;
           align-items: flex-start;
         }
+
+        .nav {
+          width: 100%;
+          grid-template-columns: 1fr;
+        }
       }
 
       @media (max-width: 560px) {
         h1 {
-          font-size: 3.4rem;
+          font-size: 2.25rem;
+          letter-spacing: 0.025em;
         }
 
         .hero-copy,
-        .section-panel,
         .archive-card {
-          padding: 22px;
+          padding: 20px;
         }
 
-        .step {
-          grid-template-columns: 1fr;
+        .hero-copy {
+          align-items: flex-start;
         }
 
         .feed-status {
           grid-template-columns: 1fr;
+        }
+
+        .feed-stage {
+          min-height: 56vh;
+        }
+
+        .hero-subtitle {
+          max-width: 100%;
+        }
+
+        .button {
+          width: 100%;
+          min-height: 54px;
+          padding: 12px 20px;
         }
       }
     </style>
@@ -653,35 +862,21 @@ HTML_TEMPLATE = """<!doctype html>
         <div class="brand">Hasta Lab</div>
         <nav class="nav">
           <a href="#live">Live Feed</a>
-          <a href="#about">About</a>
-          <a href="#how">How To Use</a>
+          <a href="/how-to">How To Use</a>
           <a href="#archive">Archive</a>
         </nav>
       </header>
 
       <section class="hero" id="live">
         <div class="hero-copy">
-          <div class="eyebrow">Live Recognition Portal</div>
           <h1>{{ content.hero.title }}</h1>
-          <p><strong>{{ content.hero.subtitle }}</strong></p>
-          <p>{{ content.hero.body }}</p>
-          <div class="hero-actions">
-            <a class="button" href="#archive">Explore Hastas</a>
-            <a class="button secondary" href="#how">How To Use</a>
-          </div>
+          <p class="hero-subtitle">{{ content.hero.intro }}</p>
         </div>
 
         <div class="hero-feed">
-          <div class="hero-feed-head">
-            <span>Detection Stage</span>
-            <span>Browser View</span>
-          </div>
           <div class="feed-stage">
             <img id="live-feed" src="{{ video_url }}" alt="Hasta detection video feed">
           </div>
-          <p class="feed-note">
-            The camera feed mirrors the live viewer styling from the Python application while the surrounding page follows the archive-inspired visual language from the reference boards.
-          </p>
           <div class="feed-status">
             <div class="status-card">
               <span class="status-label">Detected Hasta</span>
@@ -695,36 +890,12 @@ HTML_TEMPLATE = """<!doctype html>
               <span class="status-label">Hold Progress</span>
               <div id="status-progress" class="status-value">0%</div>
             </div>
-            <div class="status-card">
-              <span class="status-label">Viewer State</span>
-              <div id="status-viewer" class="status-value">Live</div>
-            </div>
           </div>
         </div>
-      </section>
 
-      <section class="section" id="about">
-        <div class="section-mark">About Hasta Lab</div>
-        <div class="section-grid" style="margin-top: 18px;">
-          {% for panel in content.about %}
-          <article class="section-panel">
-            <div class="eyebrow">Context</div>
-            <h3>{{ panel.heading }}</h3>
-            <p>{{ panel.body }}</p>
-          </article>
-          {% endfor %}
-        </div>
-      </section>
-
-      <section class="section" id="how">
-        <div class="section-mark">How To Use</div>
-        <div class="steps" style="margin-top: 18px;">
-          {% for step in content.steps %}
-          <article class="step">
-            <div class="step-index">{{ loop.index }}</div>
-            <p>{{ step }}</p>
-          </article>
-          {% endfor %}
+        <div class="hero-actions">
+          <a class="button" href="#archive">Explore Hastas</a>
+          <a class="button secondary" href="/how-to">Learn More About Hasta Lab</a>
         </div>
       </section>
 
@@ -735,7 +906,7 @@ HTML_TEMPLATE = """<!doctype html>
           <article id="archive-{{ item.slug }}" class="archive-card">
             <div class="archive-heading">
               <h2>{{ item.name }}</h2>
-              <p>Browse the interpretation clips from the sketch column to switch the reference video shown here.</p>
+              <p>Switch clips from the sketch side to view different interpretations.</p>
             </div>
 
             <div class="archive-sketch">
@@ -758,7 +929,7 @@ HTML_TEMPLATE = """<!doctype html>
                 </button>
                 {% endfor %}
               </div>
-              <a class="button archive-cta" href="#live">{{ item.cta }}</a>
+              <a class="button archive-cta" href="/">{{ item.cta }}</a>
             </div>
 
             <div class="archive-copy">
@@ -783,14 +954,12 @@ HTML_TEMPLATE = """<!doctype html>
       const statusLabel = document.getElementById("status-label");
       const statusConfidence = document.getElementById("status-confidence");
       const statusProgress = document.getElementById("status-progress");
-      const statusViewer = document.getElementById("status-viewer");
       let lastScrolledArchive = null;
 
       function applyDetectionState(state) {
         statusLabel.textContent = state.current_label || "No hand detected";
         statusConfidence.textContent = state.current_confidence || "--";
         statusProgress.textContent = state.hold_progress || "0%";
-        statusViewer.textContent = state.paused ? "Paused" : "Live";
         if (!state.archive_slug) {
           return;
         }
@@ -1227,6 +1396,13 @@ def create_app(args: argparse.Namespace) -> Flask:
             HTML_TEMPLATE,
             video_url="/video_feed",
             content=content,
+        )
+
+    @app.get("/how-to")
+    def how_to() -> str:
+        return render_template_string(
+            HOW_TO_TEMPLATE,
+            content=PAGE_CONTENT,
         )
 
     @app.get("/media/<path:filename>")
