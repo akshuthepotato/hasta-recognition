@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import atexit
 import json
+import socket
 import threading
 import time
 from collections.abc import Iterator
@@ -12,6 +13,10 @@ import cv2
 import mediapipe as mp
 from flask import Flask, Response, abort, render_template_string, send_from_directory
 from flask_sock import Sock
+from PySide6.QtCore import QUrl
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from werkzeug.serving import make_server
 
 from main import (
     BaseOptions,
@@ -643,6 +648,34 @@ HTML_TEMPLATE = """<!doctype html>
         object-fit: cover;
       }
 
+      .feed-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+      }
+
+      .feed-overlay.is-visible {
+        opacity: 1;
+      }
+
+      .feed-overlay-icon {
+        width: 0;
+        height: 0;
+        border-top: 28px solid transparent;
+        border-bottom: 28px solid transparent;
+        border-left: 42px solid rgba(247, 238, 227, 0.92);
+        filter: drop-shadow(0 10px 22px rgba(24, 16, 9, 0.24));
+      }
+
+      .feed-overlay-icon::before {
+        content: none;
+      }
+
       .feed-status {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -876,6 +909,9 @@ HTML_TEMPLATE = """<!doctype html>
         <div class="hero-feed">
           <div class="feed-stage">
             <img id="live-feed" src="{{ video_url }}" alt="Hasta detection video feed">
+            <div id="feed-overlay" class="feed-overlay" aria-hidden="true">
+              <div class="feed-overlay-icon"></div>
+            </div>
           </div>
           <div class="feed-status">
             <div class="status-card">
@@ -951,6 +987,7 @@ HTML_TEMPLATE = """<!doctype html>
     </div>
     <script>
       const liveFeed = document.getElementById("live-feed");
+      const feedOverlay = document.getElementById("feed-overlay");
       const statusLabel = document.getElementById("status-label");
       const statusConfidence = document.getElementById("status-confidence");
       const statusProgress = document.getElementById("status-progress");
@@ -960,6 +997,7 @@ HTML_TEMPLATE = """<!doctype html>
         statusLabel.textContent = state.current_label || "No hand detected";
         statusConfidence.textContent = state.current_confidence || "--";
         statusProgress.textContent = state.hold_progress || "0%";
+        feedOverlay.classList.toggle("is-visible", Boolean(state.paused));
         if (!state.archive_slug) {
           return;
         }
@@ -1385,6 +1423,7 @@ def create_app(args: argparse.Namespace) -> Flask:
         min_tracking_confidence=args.min_tracking_confidence,
     )
     atexit.register(feed.close)
+    app.extensions["browser_feed"] = feed
 
     @app.get("/")
     def index() -> str:
@@ -1445,13 +1484,87 @@ def create_app(args: argparse.Namespace) -> Flask:
     return app
 
 
+class FlaskServerThread(threading.Thread):
+    def __init__(self, app: Flask, host: str, port: int) -> None:
+        super().__init__(daemon=True)
+        self.server = make_server(host, port, app, threaded=True)
+        self.host = host
+        self.port = self.server.server_port
+        self.browser_host = "127.0.0.1" if host in {"0.0.0.0", "::"} else host
+        self._feed = app.extensions.get("browser_feed")
+        self._closed = False
+        self._close_lock = threading.Lock()
+
+    def run(self) -> None:
+        try:
+            self.server.serve_forever()
+        finally:
+            self.close_resources()
+
+    def shutdown(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+        self.close_resources()
+
+    def close_resources(self) -> None:
+        with self._close_lock:
+            if self._closed:
+                return
+            self._closed = True
+            if self._feed is not None:
+                self._feed.close()
+
+
+class BrowserWindow(QMainWindow):
+    def __init__(self, server: FlaskServerThread) -> None:
+        super().__init__()
+        self.server = server
+        self.setWindowTitle("Hasta Lab")
+        self.resize(1440, 960)
+
+        self.browser = QWebEngineView(self)
+        self.setCentralWidget(self.browser)
+        self.browser.load(QUrl(f"http://{server.browser_host}:{server.port}/"))
+
+    def closeEvent(self, event) -> None:  # noqa: N802
+        try:
+            self.browser.stop()
+        finally:
+            self.server.shutdown()
+            self.server.join(timeout=5)
+        super().closeEvent(event)
+
+
+def _wait_for_server(host: str, port: int, timeout: float = 5.0) -> None:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=0.2):
+                return
+        except OSError:
+            time.sleep(0.05)
+    raise RuntimeError(f"Timed out waiting for Flask app on http://{host}:{port}/")
+
+
 def main() -> int:
     args = build_parser().parse_args()
     app = create_app(args)
+    server = FlaskServerThread(app, args.host, args.port)
+    server.start()
     try:
-        app.run(host=args.host, port=args.port, debug=False, threaded=True)
+        _wait_for_server(server.browser_host, server.port)
+        qt_app = QApplication([])
+        window = BrowserWindow(server)
+        window.show()
+        return qt_app.exec()
     except KeyboardInterrupt:
+        server.shutdown()
+        server.join(timeout=5)
         return 130
+    except Exception:
+        server.shutdown()
+        server.join(timeout=5)
+        raise
     return 0
 
 
