@@ -45,8 +45,6 @@ from main import (
 )
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
-PATHAAKAM_DIR = ASSETS_DIR / "PATHAAKAM"
-HAMSASYAM_DIR = ASSETS_DIR / "hamsasyam"
 
 INK = "#171411"
 PAPER = "#f2ead9"
@@ -127,6 +125,14 @@ def _display_hasta_name(label: str) -> str:
         return "Pathaakam"
     if label == "Hamsasya":
         return "Hamsasyam"
+    if label == "Ardhachandra":
+        return "Ardhachandram"
+    if label == "Chatura":
+        return "Chathuram"
+    if label == "Katakamukha_1":
+        return "Katakamukam 1"
+    if label == "Mukula":
+        return "Mukulam"
     return label.replace("_", " ").title()
 
 
@@ -187,6 +193,56 @@ def _format_interpretation_label(asset_path: Path) -> str:
     return asset_path.stem.replace("_", " ").title()
 
 
+def _find_sketch_path(directory: Path) -> Path | None:
+    for candidate in sorted(directory.iterdir()):
+        if candidate.is_file() and candidate.suffix.lower() == ".png":
+            if "sketch" in candidate.stem.lower():
+                return candidate
+
+    for candidate in sorted(directory.iterdir()):
+        if candidate.is_file() and candidate.suffix.lower() == ".png":
+            return candidate
+
+    return None
+
+
+def _build_mudra_entry(directory: Path) -> MudraEntry | None:
+    sketch_path = _find_sketch_path(directory)
+    video_paths = sorted(
+        path
+        for path in directory.iterdir()
+        if path.is_file() and path.suffix.lower() in {".mov", ".mp4", ".m4v", ".webm"}
+    )
+    if sketch_path is None or not video_paths:
+        return None
+
+    name = _display_hasta_name(directory.name)
+    performer_description = MUDRA_PERFORMER_DESCRIPTIONS.get(name)
+    return MudraEntry(
+        name=name,
+        sketch_path=sketch_path,
+        performer_description=performer_description,
+        interpretations=tuple(
+            Interpretation(
+                label=_format_interpretation_label(video_path),
+                description=performer_description,
+                video_path=video_path,
+            )
+            for video_path in video_paths
+        ),
+    )
+
+
+def _load_mudra_archive() -> tuple[MudraEntry, ...]:
+    entries = [
+        entry
+        for directory in sorted(path for path in ASSETS_DIR.iterdir() if path.is_dir())
+        for entry in [_build_mudra_entry(directory)]
+        if entry is not None
+    ]
+    return tuple(entries)
+
+
 MUDRA_PERFORMER_DESCRIPTIONS: dict[str, str] = {
     "Pathaakam": "Performed by Nikita, Singapore Adavu.",
     "Hamsasyam": "Performed by Swathi, Singapore Adavu.",
@@ -209,26 +265,7 @@ def _load_directory_interpretations(
     )
 
 
-MUDRA_ARCHIVE: tuple[MudraEntry, ...] = (
-    MudraEntry(
-        name="Pathaakam",
-        sketch_path=PATHAAKAM_DIR / "sketch.png",
-        performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pathaakam"),
-        interpretations=_load_directory_interpretations(
-            PATHAAKAM_DIR,
-            performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Pathaakam"),
-        ),
-    ),
-    MudraEntry(
-        name="Hamsasyam",
-        sketch_path=HAMSASYAM_DIR / "hamsasyam sketch.png",
-        performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Hamsasyam"),
-        interpretations=_load_directory_interpretations(
-            HAMSASYAM_DIR,
-            performer_description=MUDRA_PERFORMER_DESCRIPTIONS.get("Hamsasyam"),
-        ),
-    ),
-)
+MUDRA_ARCHIVE: tuple[MudraEntry, ...] = _load_mudra_archive()
 
 
 class WebcamViewerTab(QWidget):

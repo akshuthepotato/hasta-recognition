@@ -53,22 +53,7 @@ PAGE_CONTENT = {
         "Explore the opportunity to add your own interpretation of the hand gesture.",
         "The interface then unfolds into a living archive of interpretations.",
     ],
-    "archive": [
-        {
-            "name": "Pathaakam",
-            "asset_dir": "PATHAAKAM",
-            "sketch": "sketch.png",
-            "video": "MIRROR.MOV",
-            "cta": "Back to Home Page",
-        },
-        {
-            "name": "Hamsasyam",
-            "asset_dir": "hamsasyam",
-            "sketch": "hamsasyam sketch.png",
-            "video": "saying_ok.MOV",
-            "cta": "Back to Home Page",
-        },
-    ],
+    "archive": [],
 }
 
 
@@ -81,6 +66,14 @@ def _display_hasta_name(label: str) -> str:
         return "Pathaakam"
     if label == "Hamsasya":
         return "Hamsasyam"
+    if label == "Ardhachandra":
+        return "Ardhachandram"
+    if label == "Chatura":
+        return "Chathuram"
+    if label == "Katakamukha_1":
+        return "Katakamukam 1"
+    if label == "Mukula":
+        return "Mukulam"
     return label.replace("_", " ").title()
 
 
@@ -97,6 +90,43 @@ def _asset_path(*parts: str) -> str:
 def _interpretation_label(filename: str) -> str:
     stem = Path(filename).stem
     return stem.replace("_", " ").strip().title()
+
+
+def _find_sketch_name(asset_root: Path) -> str | None:
+    png_files = sorted(
+        path.name
+        for path in asset_root.iterdir()
+        if path.is_file() and path.suffix.lower() == ".png"
+    )
+    for name in png_files:
+        if "sketch" in Path(name).stem.lower():
+            return name
+    return png_files[0] if png_files else None
+
+
+def _load_archive_items() -> list[dict[str, object]]:
+    items: list[dict[str, object]] = []
+    for asset_root in sorted(path for path in ASSETS_DIR.iterdir() if path.is_dir()):
+        interpretation_files = sorted(
+            path.name
+            for path in asset_root.iterdir()
+            if path.is_file()
+            and path.suffix.lower() in {".mov", ".mp4", ".m4v", ".webm"}
+        )
+        sketch_name = _find_sketch_name(asset_root)
+        if sketch_name is None or not interpretation_files:
+            continue
+
+        items.append(
+            {
+                "name": _display_hasta_name(asset_root.name),
+                "asset_dir": asset_root.name,
+                "sketch": sketch_name,
+                "video": interpretation_files[0],
+                "cta": "Back to Home Page",
+            }
+        )
+    return items
 
 
 def _archive_item_with_assets(item: dict[str, object]) -> dict[str, object]:
@@ -144,6 +174,9 @@ def _archive_item_with_assets(item: dict[str, object]) -> dict[str, object]:
     }
 
 
+PAGE_CONTENT["archive"] = _load_archive_items()
+
+
 HOW_TO_TEMPLATE = """<!doctype html>
 <html lang="en">
   <head>
@@ -152,24 +185,30 @@ HOW_TO_TEMPLATE = """<!doctype html>
     <title>How To Use | Hasta Lab</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@500;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        --ink: #4d2f1e;
-        --ink-soft: #755845;
-        --panel: rgba(250, 243, 233, 0.72);
-        --border: rgba(123, 86, 56, 0.18);
-        --button: #d8a07a;
-        --button-text: #4d2f1e;
+        --ink: #4f2d22;
+        --ink-soft: #77584e;
+        --panel: rgba(254, 245, 233, 0.8);
+        --border: rgba(118, 82, 54, 0.2);
+        --orange: #f28b50;
+        --pink: #d97ca4;
+        --brown: #8a5a3c;
+        --teal: #2d8c87;
+        --yellow: #f2c84b;
+        --button: linear-gradient(135deg, var(--orange), #f4aa54);
+        --button-text: #fff7ed;
         --cta-height: 56px;
         --cta-radius: 999px;
         --cta-font-size: 1rem;
         --cta-letter-spacing: 0.04em;
-        --shadow: 0 24px 80px rgba(93, 60, 34, 0.14);
-        --pastel-yellow: rgba(247, 228, 168, 0.4);
-        --pastel-green: rgba(194, 214, 187, 0.32);
-        --pastel-orange: rgba(239, 196, 151, 0.32);
-        --pastel-pink: rgba(232, 194, 193, 0.28);
+        --shadow: 0 24px 80px rgba(114, 70, 36, 0.16);
+        --mist-yellow: rgba(242, 200, 75, 0.34);
+        --mist-teal: rgba(45, 140, 135, 0.2);
+        --mist-orange: rgba(242, 139, 80, 0.22);
+        --mist-pink: rgba(217, 124, 164, 0.18);
+        --mist-brown: rgba(138, 90, 60, 0.12);
       }
 
       * {
@@ -180,12 +219,13 @@ HOW_TO_TEMPLATE = """<!doctype html>
         margin: 0;
         color: var(--ink);
         background:
-          radial-gradient(circle at 12% 14%, var(--pastel-yellow), transparent 24%),
-          radial-gradient(circle at 84% 18%, var(--pastel-pink), transparent 26%),
-          radial-gradient(circle at 18% 78%, var(--pastel-green), transparent 24%),
-          radial-gradient(circle at 88% 82%, var(--pastel-orange), transparent 28%),
-          linear-gradient(180deg, #f7eddf 0%, #f0e1cd 52%, #ebd9c4 100%);
+          radial-gradient(circle at 10% 14%, var(--mist-yellow), transparent 24%),
+          radial-gradient(circle at 86% 16%, var(--mist-pink), transparent 26%),
+          radial-gradient(circle at 18% 80%, var(--mist-teal), transparent 24%),
+          radial-gradient(circle at 88% 84%, var(--mist-orange), transparent 28%),
+          linear-gradient(180deg, #fff6ea 0%, #f8e2cf 54%, #f1d7bf 100%);
         font-family: "Jura", sans-serif;
+        font-weight: 500;
       }
 
       .shell {
@@ -206,7 +246,8 @@ HOW_TO_TEMPLATE = """<!doctype html>
         font-size: 1rem;
         letter-spacing: 0.24em;
         text-transform: uppercase;
-        color: var(--ink-soft);
+        color: var(--brown);
+        font-weight: 700;
       }
 
       .nav {
@@ -223,20 +264,21 @@ HOW_TO_TEMPLATE = """<!doctype html>
         min-height: var(--cta-height);
         padding: 0 24px;
         border-radius: var(--cta-radius);
-        border: 1px solid rgba(53, 26, 8, 0.18);
-        background: rgba(255, 247, 223, 0.7);
+        border: 1px solid rgba(45, 140, 135, 0.18);
+        background: linear-gradient(135deg, rgba(255, 248, 236, 0.92), rgba(255, 235, 220, 0.82));
         color: var(--ink);
         text-transform: uppercase;
         letter-spacing: var(--cta-letter-spacing);
         font-size: var(--cta-font-size);
         text-align: center;
         text-decoration: none;
+        font-weight: 700;
       }
 
       .button {
         background: var(--button);
         color: var(--button-text);
-        box-shadow: 0 14px 30px rgba(59, 30, 11, 0.18);
+        box-shadow: 0 14px 30px rgba(196, 111, 53, 0.28);
       }
 
       .page-card {
@@ -244,7 +286,7 @@ HOW_TO_TEMPLATE = """<!doctype html>
         border-radius: 34px;
         border: 1px solid var(--border);
         background:
-          linear-gradient(180deg, rgba(255, 246, 230, 0.9), rgba(241, 227, 204, 0.76)),
+          linear-gradient(145deg, rgba(255, 248, 239, 0.94), rgba(251, 232, 216, 0.84)),
           var(--panel);
         box-shadow: var(--shadow);
         backdrop-filter: blur(6px);
@@ -254,10 +296,11 @@ HOW_TO_TEMPLATE = """<!doctype html>
         display: inline-flex;
         align-items: center;
         gap: 12px;
-        color: var(--ink-soft);
+        color: var(--teal);
         letter-spacing: 0.14em;
         text-transform: uppercase;
         font-size: 0.78rem;
+        font-weight: 700;
       }
 
       .eyebrow::before {
@@ -273,6 +316,8 @@ HOW_TO_TEMPLATE = """<!doctype html>
         line-height: 1;
         text-transform: uppercase;
         letter-spacing: 0.04em;
+        font-weight: 700;
+        color: var(--brown);
       }
 
       .lede {
@@ -281,6 +326,7 @@ HOW_TO_TEMPLATE = """<!doctype html>
         color: var(--ink-soft);
         line-height: 1.7;
         font-size: 1rem;
+        font-weight: 500;
       }
 
       .steps {
@@ -297,7 +343,7 @@ HOW_TO_TEMPLATE = """<!doctype html>
         padding: 20px;
         border-radius: 24px;
         border: 1px solid var(--border);
-        background: rgba(255, 248, 237, 0.72);
+        background: linear-gradient(135deg, rgba(255, 249, 241, 0.92), rgba(255, 238, 223, 0.84));
       }
 
       .step-index {
@@ -306,9 +352,11 @@ HOW_TO_TEMPLATE = """<!doctype html>
         border-radius: 18px;
         display: grid;
         place-items: center;
-        background: rgba(60, 30, 11, 0.08);
-        border: 1px solid rgba(60, 30, 11, 0.12);
+        background: linear-gradient(135deg, rgba(45, 140, 135, 0.16), rgba(242, 200, 75, 0.28));
+        border: 1px solid rgba(45, 140, 135, 0.2);
         font-size: 1.2rem;
+        color: var(--brown);
+        font-weight: 700;
       }
 
       .step p {
@@ -316,6 +364,7 @@ HOW_TO_TEMPLATE = """<!doctype html>
         color: var(--ink-soft);
         line-height: 1.7;
         font-size: 1rem;
+        font-weight: 500;
       }
 
       .page-actions {
@@ -397,29 +446,34 @@ HTML_TEMPLATE = """<!doctype html>
     <title>Hasta Detection</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@500;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        --paper: #f3e6d2;
-        --paper-soft: rgba(244, 230, 208, 0.9);
-        --paper-deep: #dcc2a0;
-        --ink: #4d2f1e;
-        --ink-soft: #755845;
-        --panel: rgba(250, 243, 233, 0.68);
-        --panel-strong: rgba(247, 236, 221, 0.82);
-        --border: rgba(123, 86, 56, 0.18);
-        --button: #d8a07a;
-        --button-text: #4d2f1e;
+        --paper: #fff3e5;
+        --paper-soft: rgba(255, 241, 226, 0.92);
+        --paper-deep: #f1cb9b;
+        --ink: #4f2d22;
+        --ink-soft: #77584e;
+        --panel: rgba(255, 246, 235, 0.72);
+        --panel-strong: rgba(255, 240, 223, 0.84);
+        --border: rgba(118, 82, 54, 0.18);
+        --orange: #f28b50;
+        --pink: #d97ca4;
+        --brown: #8a5a3c;
+        --teal: #2d8c87;
+        --yellow: #f2c84b;
+        --button: linear-gradient(135deg, var(--orange), #f4aa54);
+        --button-text: #fff7ed;
         --cta-height: 56px;
         --cta-radius: 999px;
         --cta-font-size: 1rem;
         --cta-letter-spacing: 0.04em;
-        --shadow: 0 24px 80px rgba(93, 60, 34, 0.14);
-        --pastel-yellow: rgba(247, 228, 168, 0.4);
-        --pastel-green: rgba(194, 214, 187, 0.32);
-        --pastel-orange: rgba(239, 196, 151, 0.32);
-        --pastel-pink: rgba(232, 194, 193, 0.28);
-        --pastel-brown: rgba(188, 157, 130, 0.24);
+        --shadow: 0 24px 80px rgba(114, 70, 36, 0.16);
+        --mist-yellow: rgba(242, 200, 75, 0.34);
+        --mist-teal: rgba(45, 140, 135, 0.22);
+        --mist-orange: rgba(242, 139, 80, 0.22);
+        --mist-pink: rgba(217, 124, 164, 0.18);
+        --mist-brown: rgba(138, 90, 60, 0.12);
       }
 
       * {
@@ -434,12 +488,13 @@ HTML_TEMPLATE = """<!doctype html>
         margin: 0;
         color: var(--ink);
         background:
-          radial-gradient(circle at 12% 14%, var(--pastel-yellow), transparent 24%),
-          radial-gradient(circle at 84% 18%, var(--pastel-pink), transparent 26%),
-          radial-gradient(circle at 18% 78%, var(--pastel-green), transparent 24%),
-          radial-gradient(circle at 88% 82%, var(--pastel-orange), transparent 28%),
-          linear-gradient(180deg, #f7eddf 0%, #f0e1cd 52%, #ebd9c4 100%);
+          radial-gradient(circle at 12% 14%, var(--mist-yellow), transparent 24%),
+          radial-gradient(circle at 84% 18%, var(--mist-pink), transparent 26%),
+          radial-gradient(circle at 18% 78%, var(--mist-teal), transparent 24%),
+          radial-gradient(circle at 88% 82%, var(--mist-orange), transparent 28%),
+          linear-gradient(180deg, #fff6ea 0%, #f8e2cf 54%, #f1d7bf 100%);
         font-family: "Jura", sans-serif;
+        font-weight: 500;
       }
 
       body::before {
@@ -449,13 +504,13 @@ HTML_TEMPLATE = """<!doctype html>
         pointer-events: none;
         opacity: 0.15;
         background:
-          radial-gradient(circle at 20% 20%, rgba(120, 86, 39, 0.08), transparent 18%),
-          radial-gradient(circle at 80% 0%, rgba(120, 86, 39, 0.06), transparent 20%),
-          radial-gradient(circle at 50% 100%, rgba(120, 86, 39, 0.08), transparent 22%),
+          radial-gradient(circle at 20% 20%, rgba(138, 90, 60, 0.08), transparent 18%),
+          radial-gradient(circle at 80% 0%, rgba(45, 140, 135, 0.07), transparent 20%),
+          radial-gradient(circle at 50% 100%, rgba(217, 124, 164, 0.07), transparent 22%),
           repeating-linear-gradient(
             135deg,
-            rgba(116, 85, 58, 0.035) 0,
-            rgba(116, 85, 58, 0.035) 2px,
+            rgba(138, 90, 60, 0.035) 0,
+            rgba(138, 90, 60, 0.035) 2px,
             transparent 2px,
             transparent 9px
           );
@@ -486,7 +541,8 @@ HTML_TEMPLATE = """<!doctype html>
         font-size: 1rem;
         letter-spacing: 0.24em;
         text-transform: uppercase;
-        color: var(--ink-soft);
+        color: var(--brown);
+        font-weight: 700;
       }
 
       .nav {
@@ -502,12 +558,13 @@ HTML_TEMPLATE = """<!doctype html>
         min-height: var(--cta-height);
         padding: 0 24px;
         border-radius: var(--cta-radius);
-        background: rgba(255, 247, 223, 0.6);
+        background: linear-gradient(135deg, rgba(255, 248, 236, 0.9), rgba(255, 235, 220, 0.82));
         border: 1px solid var(--border);
         font-size: var(--cta-font-size);
         letter-spacing: var(--cta-letter-spacing);
         text-transform: uppercase;
         text-align: center;
+        font-weight: 700;
       }
 
       .hero {
@@ -533,7 +590,7 @@ HTML_TEMPLATE = """<!doctype html>
         border-radius: 34px;
         padding: 24px 28px;
         background:
-          linear-gradient(180deg, rgba(255, 246, 230, 0.9), rgba(241, 227, 204, 0.76)),
+          linear-gradient(140deg, rgba(255, 245, 235, 0.94), rgba(255, 229, 212, 0.82)),
           var(--panel);
         display: flex;
         flex-wrap: wrap;
@@ -546,10 +603,11 @@ HTML_TEMPLATE = """<!doctype html>
         display: inline-flex;
         align-items: center;
         gap: 12px;
-        color: var(--ink-soft);
+        color: var(--teal);
         letter-spacing: 0.14em;
         text-transform: uppercase;
         font-size: 0.78rem;
+        font-weight: 700;
       }
 
       .section-mark::before,
@@ -564,7 +622,7 @@ HTML_TEMPLATE = """<!doctype html>
       h2,
       h3 {
         margin: 0;
-        font-weight: 600;
+        font-weight: 700;
         line-height: 0.98;
       }
 
@@ -574,6 +632,7 @@ HTML_TEMPLATE = """<!doctype html>
         text-transform: uppercase;
         letter-spacing: 0.035em;
         overflow-wrap: anywhere;
+        color: var(--brown);
       }
 
       .hero-subtitle {
@@ -582,6 +641,7 @@ HTML_TEMPLATE = """<!doctype html>
         font-size: 1rem;
         line-height: 1.65;
         color: var(--ink-soft);
+        font-weight: 500;
       }
 
       .hero-actions {
@@ -598,26 +658,28 @@ HTML_TEMPLATE = """<!doctype html>
         min-height: var(--cta-height);
         padding: 0 26px;
         border-radius: var(--cta-radius);
-        border: 1px solid rgba(53, 26, 8, 0.22);
+        border: 1px solid rgba(53, 26, 8, 0.12);
         background: var(--button);
         color: var(--button-text);
         text-transform: uppercase;
         letter-spacing: var(--cta-letter-spacing);
         font-size: var(--cta-font-size);
         text-align: center;
-        box-shadow: 0 14px 30px rgba(59, 30, 11, 0.18);
+        box-shadow: 0 14px 30px rgba(196, 111, 53, 0.28);
+        font-weight: 700;
       }
 
       .button.secondary {
-        background: rgba(216, 160, 122, 0.58);
-        color: var(--ink);
+        background: linear-gradient(135deg, rgba(45, 140, 135, 0.18), rgba(217, 124, 164, 0.18));
+        color: var(--brown);
+        border-color: rgba(45, 140, 135, 0.24);
       }
 
       .hero-feed {
         border-radius: 36px;
         padding: 16px;
         background:
-          linear-gradient(180deg, rgba(141, 101, 67, 0.16), rgba(247, 238, 227, 0.84)),
+          linear-gradient(180deg, rgba(45, 140, 135, 0.14), rgba(255, 241, 225, 0.88)),
           var(--panel-strong);
         display: flex;
         flex-direction: column;
@@ -628,7 +690,7 @@ HTML_TEMPLATE = """<!doctype html>
         overflow: hidden;
         border-radius: 30px;
         border: 1px solid rgba(63, 36, 14, 0.16);
-        background: #1c150f;
+        background: linear-gradient(180deg, #3f2a20, #1d1713);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -653,10 +715,22 @@ HTML_TEMPLATE = """<!doctype html>
       .status-card {
         padding: 13px 14px;
         border-radius: 18px;
-        border: 1px solid rgba(82, 51, 24, 0.12);
+        border: 1px solid rgba(82, 51, 24, 0.1);
         background:
-          linear-gradient(180deg, rgba(255, 248, 239, 0.72), rgba(246, 233, 214, 0.7)),
+          linear-gradient(180deg, rgba(255, 248, 239, 0.84), rgba(249, 232, 220, 0.78)),
           rgba(255, 247, 223, 0.66);
+      }
+
+      .status-card:nth-child(1) {
+        border-color: rgba(242, 139, 80, 0.2);
+      }
+
+      .status-card:nth-child(2) {
+        border-color: rgba(217, 124, 164, 0.2);
+      }
+
+      .status-card:nth-child(3) {
+        border-color: rgba(45, 140, 135, 0.2);
       }
 
       .status-label {
@@ -666,11 +740,13 @@ HTML_TEMPLATE = """<!doctype html>
         font-size: 0.78rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+        font-weight: 700;
       }
 
       .status-value {
         font-size: 1.1rem;
         line-height: 1.3;
+        font-weight: 500;
       }
 
       .section {
@@ -689,6 +765,9 @@ HTML_TEMPLATE = """<!doctype html>
         grid-template-columns: minmax(260px, 360px) 1fr;
         gap: 24px;
         align-items: start;
+        background:
+          linear-gradient(145deg, rgba(255, 247, 237, 0.92), rgba(255, 233, 220, 0.82)),
+          var(--panel);
       }
 
       .archive-heading {
@@ -698,6 +777,12 @@ HTML_TEMPLATE = """<!doctype html>
       .archive-heading h2 {
         margin-top: 12px;
         font-size: clamp(2.2rem, 4.4vw, 3.6rem);
+        color: var(--brown);
+      }
+
+      .archive-heading p {
+        color: var(--ink-soft);
+        font-weight: 500;
       }
 
       .archive-sketch {
@@ -708,8 +793,8 @@ HTML_TEMPLATE = """<!doctype html>
       .archive-sketch-box {
         padding: 20px;
         border-radius: 24px;
-        background: rgba(255, 250, 237, 0.72);
-        border: 1px dashed rgba(82, 51, 24, 0.18);
+        background: linear-gradient(135deg, rgba(255, 250, 242, 0.92), rgba(255, 238, 221, 0.84));
+        border: 1px dashed rgba(45, 140, 135, 0.24);
         min-height: 320px;
         display: grid;
         place-items: center;
@@ -726,6 +811,7 @@ HTML_TEMPLATE = """<!doctype html>
         color: var(--ink-soft);
         line-height: 1.65;
         font-size: 0.96rem;
+        font-weight: 500;
       }
 
       .chip-grid {
@@ -737,12 +823,13 @@ HTML_TEMPLATE = """<!doctype html>
       .chip {
         padding: 10px 14px;
         border-radius: 999px;
-        background: rgba(255, 245, 216, 0.86);
-        border: 1px solid rgba(82, 51, 24, 0.12);
-        color: var(--ink-soft);
+        background: linear-gradient(135deg, rgba(255, 244, 214, 0.9), rgba(255, 230, 218, 0.84));
+        border: 1px solid rgba(217, 124, 164, 0.16);
+        color: var(--brown);
         font-size: 0.95rem;
         cursor: pointer;
         transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease;
+        font-weight: 500;
       }
 
       button.chip {
@@ -751,13 +838,13 @@ HTML_TEMPLATE = """<!doctype html>
 
       .chip:hover {
         transform: translateY(-1px);
-        border-color: rgba(82, 51, 24, 0.28);
+        border-color: rgba(45, 140, 135, 0.28);
       }
 
       .chip.is-active {
-        background: var(--button);
+        background: linear-gradient(135deg, var(--pink), var(--orange));
         color: var(--button-text);
-        border-color: rgba(53, 26, 8, 0.3);
+        border-color: rgba(138, 90, 60, 0.24);
       }
 
       .interpretation-frame {
@@ -765,14 +852,14 @@ HTML_TEMPLATE = """<!doctype html>
         border-radius: 32px;
         padding: 18px;
         background:
-          linear-gradient(180deg, rgba(221, 183, 146, 0.2), rgba(255, 247, 234, 0.84)),
+          linear-gradient(180deg, rgba(242, 200, 75, 0.16), rgba(255, 245, 232, 0.9)),
           var(--panel-strong);
       }
 
       .interpretation-media {
         border-radius: 22px;
         overflow: hidden;
-        background: #704024;
+        background: linear-gradient(180deg, #7c4f35, #50382b);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -884,7 +971,7 @@ HTML_TEMPLATE = """<!doctype html>
             </div>
             <div class="status-card">
               <span class="status-label">Confidence</span>
-              <div id="status-confidence" class="status-value">--</div>
+              <div id="status-confidence" class="status-value">Waiting</div>
             </div>
             <div class="status-card">
               <span class="status-label">Hold Progress</span>
@@ -958,7 +1045,7 @@ HTML_TEMPLATE = """<!doctype html>
 
       function applyDetectionState(state) {
         statusLabel.textContent = state.current_label || "No hand detected";
-        statusConfidence.textContent = state.current_confidence || "--";
+        statusConfidence.textContent = state.current_confidence || "Waiting";
         statusProgress.textContent = state.hold_progress || "0%";
         if (!state.archive_slug) {
           return;
