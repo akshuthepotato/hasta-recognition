@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import atexit
 import json
+import re
 import socket
 import threading
 import time
@@ -68,7 +69,7 @@ def _archive_slug(name: str) -> str:
 
 def _display_hasta_name(label: str) -> str:
     if label == "Pataka":
-        return "Pathaakam"
+        return "Pathakam"
     if label == "Hamsasya":
         return "Hamsasyam"
     if label == "Ardhachandra":
@@ -76,10 +77,61 @@ def _display_hasta_name(label: str) -> str:
     if label == "Chatura":
         return "Chathuram"
     if label == "Katakamukha_1":
-        return "Katakamukam 1"
+        return "Katakaamukham"
+    if label == "Ardhapataka":
+        return "Ardhapathakam"
+    if label == "Kartarimukha":
+        return "Kartharimukham"
+    if label == "Kapitta":
+        return "Kapitham"
+    if label == "Shikhara":
+        return "Shikaram"
+    if label == "Tripataka":
+        return "Thripathakam"
     if label == "Mukula":
         return "Mukulam"
     return label.replace("_", " ").title()
+
+
+MUDRA_KEY_ALIASES = {
+    "pataka": "pathakam",
+    "patakam": "pathakam",
+    "pathakam": "pathakam",
+    "pathaakam": "pathakam",
+    "hamsasya": "hamsasyam",
+    "hamsasyam": "hamsasyam",
+    "ardhachandra": "ardhachandram",
+    "ardhachandram": "ardhachandram",
+    "ardhapataka": "ardhapathakam",
+    "ardhapathakam": "ardhapathakam",
+    "ardhapathaakam": "ardhapathakam",
+    "chatura": "chathuram",
+    "chathuram": "chathuram",
+    "katakamukha1": "katakaamukham",
+    "katakamukam": "katakaamukham",
+    "katakamukam1": "katakaamukham",
+    "katakaamukam": "katakaamukham",
+    "katakaamukam1": "katakaamukham",
+    "katakaamukha1": "katakaamukham",
+    "katakamukham": "katakaamukham",
+    "katakaamukham": "katakaamukham",
+    "mukula": "mukulam",
+    "mukulam": "mukulam",
+    "kartarimukha": "kartharimukham",
+    "kartharimukham": "kartharimukham",
+    "kapitta": "kapitham",
+    "kapitham": "kapitham",
+    "shikhara": "shikaram",
+    "shikaram": "shikaram",
+    "tripataka": "thripathakam",
+    "thripathakam": "thripathakam",
+    "mushti": "mushti",
+}
+
+
+def _normalize_mudra_key(value: str) -> str:
+    compact = re.sub(r"[^a-z0-9]+", "", value.lower())
+    return MUDRA_KEY_ALIASES.get(compact, compact)
 
 
 def _browser_visible_label(label: str | None) -> str | None:
@@ -97,7 +149,26 @@ def _interpretation_label(filename: str) -> str:
     return stem.replace("_", " ").strip().title()
 
 
+def _build_sketch_index(asset_root: Path) -> dict[str, str]:
+    sketch_index: dict[str, str] = {}
+    for candidate in sorted(asset_root.glob("*.png")):
+        sketch_key = candidate.stem
+        for token in ("illustration", "sketch"):
+            sketch_key = sketch_key.replace(token, "")
+        normalized_key = _normalize_mudra_key(sketch_key.strip())
+        if normalized_key and normalized_key not in sketch_index:
+            sketch_index[normalized_key] = _asset_path(*candidate.relative_to(ASSETS_DIR).parts)
+    return sketch_index
+
+
+SKETCH_INDEX = _build_sketch_index(ASSETS_DIR)
+
+
 def _find_sketch_name(asset_root: Path) -> str | None:
+    sketch_name = SKETCH_INDEX.get(_normalize_mudra_key(asset_root.name))
+    if sketch_name is not None:
+        return sketch_name
+
     png_files = sorted(
         path.name
         for path in asset_root.iterdir()
@@ -105,8 +176,12 @@ def _find_sketch_name(asset_root: Path) -> str | None:
     )
     for name in png_files:
         if "sketch" in Path(name).stem.lower():
-            return name
-    return png_files[0] if png_files else None
+            return _asset_path(*asset_root.relative_to(ASSETS_DIR).parts, name)
+    return (
+        _asset_path(*asset_root.relative_to(ASSETS_DIR).parts, png_files[0])
+        if png_files
+        else None
+    )
 
 
 def _iter_asset_roots() -> Iterator[Path]:
@@ -141,7 +216,7 @@ def _load_archive_items() -> list[dict[str, object]]:
                 "asset_dir": _asset_path(*asset_dir.parts),
                 "performer": asset_dir.parts[0].strip(),
                 "sketch": sketch_name,
-                "video": interpretation_files[0],
+                "video": _asset_path(*asset_dir.parts, interpretation_files[0]),
                 "cta": "Back to Home Page",
             }
         )
@@ -155,9 +230,9 @@ def _archive_item_with_assets(item: dict[str, object]) -> dict[str, object]:
     sketch_value = item.get("sketch")
     sketch_name = None
     if sketch_value:
-        candidate = asset_root / str(sketch_value)
+        candidate = ASSETS_DIR / str(sketch_value)
         if candidate.is_file():
-            sketch_name = _asset_path(str(asset_dir), str(sketch_value))
+            sketch_name = str(sketch_value)
 
     interpretation_files = sorted(
         path.name
@@ -168,9 +243,9 @@ def _archive_item_with_assets(item: dict[str, object]) -> dict[str, object]:
     video_value = item.get("video")
     video_name = None
     if video_value:
-        candidate = asset_root / str(video_value)
+        candidate = ASSETS_DIR / str(video_value)
         if candidate.is_file():
-            video_name = _asset_path(str(asset_dir), str(video_value))
+            video_name = str(video_value)
     if video_name is None and interpretation_files:
         video_name = _asset_path(str(asset_dir), interpretation_files[0])
 
@@ -448,7 +523,7 @@ HOW_TO_TEMPLATE = """<!doctype html>
         </section>
 
         <div class="page-actions">
-          <a class="button" href="/">Back to Home Page</a>
+          <a class="button" href="/#live">Back to Home Page</a>
         </div>
       </main>
     </div>
@@ -1073,7 +1148,7 @@ HTML_TEMPLATE = """<!doctype html>
                 </button>
                 {% endfor %}
               </div>
-              <a class="button archive-cta" href="/">{{ item.cta }}</a>
+              <a class="button archive-cta" href="/#live">{{ item.cta }}</a>
             </div>
 
             <div class="archive-copy">
