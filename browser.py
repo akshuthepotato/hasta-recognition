@@ -32,7 +32,7 @@ from main import (
     draw_progress_circle,
 )
 
-ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+ASSETS_DIR = Path(__file__).resolve().parent / "assets-new"
 OVERLAY_LINE = (106, 88, 48)
 
 PAGE_CONTENT = {
@@ -109,23 +109,37 @@ def _find_sketch_name(asset_root: Path) -> str | None:
     return png_files[0] if png_files else None
 
 
+def _iter_asset_roots() -> Iterator[Path]:
+    for path in sorted(ASSETS_DIR.iterdir()):
+        if not path.is_dir():
+            continue
+
+        nested_dirs = sorted(child for child in path.iterdir() if child.is_dir())
+        if nested_dirs:
+            yield from nested_dirs
+        else:
+            yield path
+
+
 def _load_archive_items() -> list[dict[str, object]]:
     items: list[dict[str, object]] = []
-    for asset_root in sorted(path for path in ASSETS_DIR.iterdir() if path.is_dir()):
+    for asset_root in _iter_asset_roots():
         interpretation_files = sorted(
             path.name
             for path in asset_root.iterdir()
             if path.is_file()
-            and path.suffix.lower() in {".mov", ".mp4", ".m4v", ".webm"}
+            and path.suffix.lower() in {".webm"}
         )
         sketch_name = _find_sketch_name(asset_root)
-        if sketch_name is None or not interpretation_files:
+        if not interpretation_files:
             continue
 
+        asset_dir = asset_root.relative_to(ASSETS_DIR)
         items.append(
             {
                 "name": _display_hasta_name(asset_root.name),
-                "asset_dir": asset_root.name,
+                "asset_dir": _asset_path(*asset_dir.parts),
+                "performer": asset_dir.parts[0].strip(),
                 "sketch": sketch_name,
                 "video": interpretation_files[0],
                 "cta": "Back to Home Page",
@@ -149,7 +163,7 @@ def _archive_item_with_assets(item: dict[str, object]) -> dict[str, object]:
         path.name
         for path in asset_root.iterdir()
         if path.is_file()
-        and path.suffix.lower() in {".mov", ".mp4", ".m4v", ".webm"}
+        and path.suffix.lower() == ".webm"
     )
     video_value = item.get("video")
     video_name = None
@@ -906,6 +920,13 @@ HTML_TEMPLATE = """<!doctype html>
         object-fit: contain;
       }
 
+      .performer-credit {
+        margin: 12px 4px 0;
+        color: var(--ink-soft);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
       .archive-cta {
         margin-top: 18px;
       }
@@ -1065,6 +1086,9 @@ HTML_TEMPLATE = """<!doctype html>
                   </video>
                 </div>
               </div>
+              {% if item.performer %}
+              <p class="performer-credit">Performed by: {{ item.performer }}, Apsara Dance Academy</p>
+              {% endif %}
               {% endif %}
             </div>
           </article>
