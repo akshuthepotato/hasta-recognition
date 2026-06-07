@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How To Use | Hasta Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .page-card {
+        padding: 28px;
+        border-radius: 34px;
+      }
+
+      .page-card h1 {
+        margin-top: 16px;
+      }
+
+      .eyebrow {
+        color: #79451f;
+      }
+
+      .lede {
+        margin: 18px 0 0;
+        max-width: none;
+        white-space: nowrap;
+      }
+
+      .steps {
+        margin-top: 28px;
+      }
+
+      .step-index {
+        align-self: start;
+      }
+
+      .page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 28px;
+        justify-content: flex-end;
+      }
+
+      .topbar {
+        justify-content: flex-end;
+      }
+
+      .nav {
+        margin-left: 0;
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          width: min(100vw - 20px, 980px);
+          padding-top: 16px;
+        }
+
+        .page-card {
+          padding: 22px;
+          border-radius: 28px;
+        }
+
+        .lede {
+          white-space: normal;
+        }
+
+        .page-actions .button {
+          width: 100%;
+        }
+
+        .nav {
+          margin-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <nav class="nav">
+          <a href="./index.html#live">Live Feed</a>
+          <a href="./how-to.html">How To Use</a>
+          <a href="./index.html#archive">Archive</a>
+        </nav>
+      </header>
+
+      <main class="page-card guide-card">
+        <div class="eyebrow">Guide</div>
+        <h1>How To Use</h1>
+        <p class="lede">
+          Hasta Lab invites you to move from gesture to meaning, then from
+          meaning to your own interpretation.
+        </p>
+
+        <section class="steps">
+          <article class="step">
+            <div class="step-index">1</div>
+            <p>Approach the interface and perform a hasta.</p>
+          </article>
+          <article class="step">
+            <div class="step-index">2</div>
+            <p>
+              Wait for the system to detect the gesture and give you visual
+              feedback.
+            </p>
+          </article>
+          <article class="step">
+            <div class="step-index">3</div>
+            <p>
+              Explore performing all the expanded meanings of the hand gesture.
+            </p>
+          </article>
+          <article class="step">
+            <div class="step-index">4</div>
+            <p>The interface then unfolds into a living archive of interpretations.</p>
+          </article>
+        </section>
+
+        <div class="page-actions">
+          <a class="button" href="./index.html#live">Back to Home Page</a>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

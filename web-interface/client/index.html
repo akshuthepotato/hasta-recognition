@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hasta Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <nav class="nav">
+          <a href="#live">Live Feed</a>
+          <a href="./how-to.html">How To Use</a>
+          <a href="#archive">Archive</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero" id="live">
+          <div class="hero-copy">
+            <h1>Hasta Lab</h1>
+            <p class="hero-subtitle">
+              A beginner friendly learning portal of single hand gestures and
+              their expanded meanings.
+            </p>
+          </div>
+
+          <div class="hero-feed">
+            <div class="feed-stage">
+              <video id="webcam" autoplay playsinline muted></video>
+              <canvas id="pausedFrame" aria-hidden="true"></canvas>
+              <canvas id="overlay"></canvas>
+              <div id="feedOverlay" class="feed-overlay" aria-hidden="true">
+                <div class="feed-overlay-icon"></div>
+              </div>
+            </div>
+            <div class="feed-status" aria-live="polite">
+              <div class="status-card">
+                <span class="status-label">Detected Hasta</span>
+                <div id="gestureName" class="status-value">No hand detected</div>
+              </div>
+              <div class="status-card">
+                <span class="status-label">Confidence</span>
+                <div id="gestureScore" class="status-value">Waiting</div>
+              </div>
+              <div class="status-card">
+                <span class="status-label">Hold Progress</span>
+                <div id="holdProgress" class="status-value">0%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-actions">
+            <a class="button" href="#archive">Explore Hastas</a>
+            <a class="button secondary" href="./how-to.html"
+              >Learn More About Hasta Lab</a
+            >
+          </div>
+        </section>
+
+        <section class="section" id="archive">
+          <div class="section-mark">Hasta Archive</div>
+          <div id="archiveList" class="archive"></div>
+        </section>
+      </main>
+    </div>
+    <p id="status" hidden aria-live="polite">Loading page.</p>
+  </body>
+</html>

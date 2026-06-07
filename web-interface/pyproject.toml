@@ -1,0 +1,9 @@
+[project]
+name = "web-interface"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=2.0.2",
+    "websockets>=15.0.1",
+    "xgboost>=2.1.4",
+]
