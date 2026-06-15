@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Practise Bharatanatyam hand gestures with real-time visual feedback."
+    />
+    <title>Hasta Lab | Natya Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="lab-page hasta-page">
+    <nav class="nav" aria-label="Main navigation">
+      <a class="wordmark" href="./index.html">
+        <strong>Natya</strong><span>Lab</span>
+      </a>
+      <div class="nav-links">
+        <a href="./index.html#about">About</a>
+        <a href="./hasta-lab.html" aria-current="page">Hasta Lab</a>
+        <a href="./rasa-lab.html">Rasa Lab</a>
+      </div>
+    </nav>
+
+    <main>
+      <section class="gesture-rack" id="archive">
+        <div class="gesture-grid">
+          <article id="archive-pathakam">
+            <h2>Pathaakam</h2>
+            <img src="./assets/1 illustration.png" alt="Pathaakam hand gesture" />
+          </article>
+          <article id="archive-thripathakam">
+            <h2>Thripathaakam</h2>
+            <img
+              src="./assets/2 illustration.png"
+              alt="Thripathaakam hand gesture"
+            />
+          </article>
+          <article id="archive-ardhapathakam">
+            <h2>Ardhapathaakam</h2>
+            <img
+              src="./assets/3 illustration.png"
+              alt="Ardhapathaakam hand gesture"
+            />
+          </article>
+          <article id="archive-kartharimukham">
+            <h2>Kartharimukham</h2>
+            <img
+              src="./assets/4 illustration.png"
+              alt="Kartharimukham hand gesture"
+            />
+          </article>
+        </div>
+      </section>
+
+      <section class="hasta-lab" id="live">
+        <div class="lab-heading">
+          <h1><strong>Hasta</strong> Lab</h1>
+          <div class="lab-intro">
+            <p>
+              Hasta Lab is a hand gesture recognition learning tool that helps
+              dancers <strong>understand and practise the hastas</strong> (hand
+              gestures) of Bharatanatyam through real-time feedback.
+            </p>
+            <p>
+              Using a camera, the system analyses a dancer's hand position and
+              <strong>identifies the hasta being performed.</strong> Learners
+              can explore the gesture's meanings and usages, compare their hand
+              shape against reference demonstrations, and receive immediate
+              feedback on accuracy and correctness.
+            </p>
+            <p>
+              The goal of Hasta Lab is to make learning hastas more
+              <strong>interactive, self-paced, and accessible</strong>, helping
+              dancers move beyond memorisation towards a deeper understanding
+              of how gestures can be used for communication, storytelling, and
+              creative expression.
+            </p>
+          </div>
+        </div>
+
+        <div class="live-interface">
+          <aside class="gesture-reference">
+            <p class="panel-label">Detected Hasta</p>
+            <strong id="gestureName">Pathaakam</strong>
+            <img src="./assets/1 illustration.png" alt="Pathaakam reference" />
+            <div class="metric">
+              <span>Hold progress</span>
+              <strong id="holdProgress">0%</strong>
+            </div>
+            <div class="metric">
+              <span>Confidence</span>
+              <strong id="gestureScore">Waiting</strong>
+            </div>
+          </aside>
+
+          <div class="feed-stage">
+            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="pausedFrame" aria-hidden="true"></canvas>
+            <canvas id="overlay"></canvas>
+            <div class="camera-placeholder" aria-hidden="true">
+              <span>Camera feed</span>
+              <small>Gesture detection will appear here</small>
+            </div>
+            <div id="feedOverlay" class="feed-overlay" aria-hidden="true"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="archiveList" hidden></div>
+    <p id="status" class="sr-only" aria-live="polite">Page ready.</p>
+  </body>
+</html>

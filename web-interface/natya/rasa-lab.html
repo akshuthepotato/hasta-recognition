@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Practise Bharatanatyam facial expressions with real-time visual feedback."
+    />
+    <title>Rasa Lab | Natya Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="lab-page rasa-page">
+    <nav class="nav" aria-label="Main navigation">
+      <a class="wordmark" href="./index.html">
+        <strong>Natya</strong><span>Lab</span>
+      </a>
+      <div class="nav-links">
+        <a href="./index.html#about">About</a>
+        <a href="./hasta-lab.html">Hasta Lab</a>
+        <a href="./rasa-lab.html" aria-current="page">Rasa Lab</a>
+      </div>
+    </nav>
+
+    <main class="rasa-lab">
+      <header class="lab-heading">
+        <h1><strong>Rasa</strong> Lab</h1>
+        <div class="lab-intro">
+          <p>
+            Rasa Lab is a facial recognition learning tool that helps dancers
+            <strong>understand and practise the Navarasas</strong> (nine
+            emotions) of Bharatanatyam through real-time feedback.
+          </p>
+          <p>
+            Using a camera, the system analyses a dancer's facial expressions
+            and <strong>identifies the rasa being performed.</strong> Learners
+            can explore each emotion, compare their expression against
+            reference demonstrations, and receive immediate feedback on
+            accuracy and clarity.
+          </p>
+          <p>
+            The goal of Rasa Lab is to make the learning of abhinaya more
+            <strong>interactive, self-paced, and accessible</strong>, helping
+            dancers develop emotional expression, confidence, and a deeper
+            understanding of <strong>the Navarasas</strong> beyond teacher-led
+            correction.
+          </p>
+        </div>
+      </header>
+
+      <section class="live-interface rasa-interface">
+        <aside class="rasa-reference">
+          <p class="panel-label">Detected Rasa</p>
+          <strong id="rasaName">Hasyam</strong>
+          <div class="expression-mark" aria-hidden="true">Hasyam</div>
+          <div class="metric">
+            <span>Expression progress</span>
+            <strong id="expressionProgress">0%</strong>
+          </div>
+          <div class="metric">
+            <span>Confidence</span>
+            <strong id="rasaScore">Waiting</strong>
+          </div>
+        </aside>
+
+        <div class="feed-stage rasa-feed">
+          <video id="webcam" autoplay playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          <div class="camera-placeholder" aria-hidden="true">
+            <span>Camera feed</span>
+            <small>Expression detection will appear here</small>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
