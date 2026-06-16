@@ -12,6 +12,12 @@ directory structure:
 This directory is a dependency-free static site. Keep it that way unless a
 requested feature clearly needs otherwise.
 
+## Local preview
+
+- When asked to open or preview the website, serve this directory first.
+- Use `python3 -m http.server` from `/Users/akshara/Desktop/hasta_detection/web-interface/natya`.
+- Open the served local URL rather than loading the HTML files directly.
+
 ### Pages
 
 - `index.html`: home page containing the hero and About section.
