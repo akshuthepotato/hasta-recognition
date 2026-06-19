@@ -9,6 +9,7 @@
     />
     <title>Hasta Lab | Natya Lab</title>
     <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./hasta-lab.js"></script>
   </head>
   <body class="lab-page hasta-page">
     <nav class="nav" aria-label="Main navigation">
@@ -98,11 +99,13 @@
             <video id="webcam" autoplay playsinline muted></video>
             <canvas id="pausedFrame" aria-hidden="true"></canvas>
             <canvas id="overlay"></canvas>
-            <div class="camera-placeholder" aria-hidden="true">
+            <div id="cameraPlaceholder" class="camera-placeholder" aria-hidden="true">
               <span>Camera feed</span>
               <small>Gesture detection will appear here</small>
             </div>
-            <div id="feedOverlay" class="feed-overlay" aria-hidden="true"></div>
+            <button id="feedOverlay" class="feed-overlay" type="button">
+              Great job! Try another one!
+            </button>
           </div>
         </div>
       </section>

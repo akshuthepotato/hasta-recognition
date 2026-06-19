@@ -15,18 +15,21 @@ requested feature clearly needs otherwise.
 ## Local preview
 
 - When asked to open or preview the website, serve this directory first.
-- Use `python3 -m http.server` from `/Users/akshara/Desktop/hasta_detection/web-interface/natya`.
+- Use `python3 -m http.server` from the current `natya/` directory.
 - Open the served local URL rather than loading the HTML files directly.
 
 ### Pages
 
 - `index.html`: home page containing the hero and About section.
-- `hasta-lab.html`: Hasta archive strip and the placeholder live hand-gesture
-  interface.
+- `hasta-lab.html`: Hasta archive strip and the live hand-gesture interface.
 - `rasa-lab.html`: placeholder live facial-expression interface.
 - `styles.css`: shared visual system and responsive layouts for all pages.
 - `home.js`: home-hero network animation only. It is not loaded by the lab
   pages.
+- `hasta-lab.js`: camera, MediaPipe landmark extraction, WebSocket prediction,
+  and hold-state behavior for Hasta Lab only.
+- `service-worker.js`: cache-first storage for the versioned MediaPipe model
+  and WASM files.
 
 There is no How To page. The home hero links directly to the two lab pages via
 `Explore Hastas` and `Explore Rasas`.
@@ -83,13 +86,30 @@ There is no How To page. The home hero links directly to the two lab pages via
   - transition paragraph beginning `While this preserves tradition`
   - `About Natya Lab` heading and the movement-recognition closing paragraph
 
+### Hasta Lab behavior
+
+- MediaPipe runs in the browser and sends one hand's normalized landmarks to
+  `wss://hasta-recognition-holy-darkness-1170.fly.dev` for classification.
+- Camera startup must not depend on WebSocket availability. If the server is
+  unavailable, keep showing the camera and report that recognition is offline.
+- A recognized hasta must be held for three seconds. Allow gaps and mismatched
+  predictions up to `600ms` before resetting or switching the hold.
+- At 100%, freeze the current frame and show the dark completion overlay with
+  `Great job! Try another one!`; clicking it resumes recognition.
+- Do not draw a progress border around the camera. The hold percentage stays
+  yellow through 80%, then transitions to green from 80–100%.
+- Use the native service worker cache for the MediaPipe model and WASM. Keep
+  their URLs versioned when upgrading MediaPipe so stale assets are not reused.
+- The service worker and camera require HTTPS in production or localhost during
+  development.
+
 ### Implementation boundaries
 
 - Preserve IDs such as `webcam`, `overlay`, `pausedFrame`, `gestureName`,
   `gestureScore`, `holdProgress`, and `status`; they are hooks for the later
   behavior migration from `../client/`.
-- Hasta and Rasa pages are currently visual shells. Do not invent recognition
-  behavior until that migration is requested.
+- The Hasta archive and Rasa page are still visual shells. Do not invent their
+  behavior until those migrations are requested.
 - Prefer semantic HTML, CSS, and small native JavaScript. Add no framework,
   build system, or package for visual-only work.
 - Maintain responsive layouts and accessibility basics, including meaningful

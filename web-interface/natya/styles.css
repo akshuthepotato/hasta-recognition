@@ -535,6 +535,19 @@ img {
   transform: scaleX(-1);
 }
 
+#pausedFrame {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#pausedFrame.is-visible {
+  opacity: 1;
+}
+
+#overlay {
+  pointer-events: none;
+}
+
 .camera-placeholder {
   display: grid;
   place-content: center;
@@ -549,6 +562,10 @@ img {
   background-size: 4rem 4rem;
 }
 
+.camera-placeholder[hidden] {
+  display: none;
+}
+
 .camera-placeholder span {
   font-size: clamp(1.5rem, 4vw, 3rem);
   letter-spacing: 0.24em;
@@ -560,8 +577,34 @@ img {
   letter-spacing: 0.12em;
 }
 
-.feed-stage:has(#webcam[srcObject]) .camera-placeholder {
-  display: none;
+.feed-overlay {
+  border: 0;
+  background: rgba(3, 58, 25, 0.72);
+  color: var(--silk);
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: 0.12em;
+  opacity: 0;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+.feed-overlay::before {
+  content: "";
+  width: 0;
+  height: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-top: 3rem solid transparent;
+  border-bottom: 3rem solid transparent;
+  border-left: 4.5rem solid rgba(253, 245, 216, 0.35);
+  transform: translate(-40%, -50%);
+}
+
+.feed-overlay.is-visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 footer {
