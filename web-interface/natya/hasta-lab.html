@@ -28,26 +28,26 @@
         <div class="gesture-grid">
           <article id="archive-pathakam">
             <h2>Pathaakam</h2>
-            <img src="./assets/1 illustration.png" alt="Pathaakam hand gesture" />
+            <img src="./assets/hasta_illustrations/1 illustration.png" alt="Pathaakam hand gesture" />
           </article>
           <article id="archive-thripathakam">
             <h2>Thripathaakam</h2>
             <img
-              src="./assets/2 illustration.png"
+              src="./assets/hasta_illustrations/2 illustration.png"
               alt="Thripathaakam hand gesture"
             />
           </article>
           <article id="archive-ardhapathakam">
             <h2>Ardhapathaakam</h2>
             <img
-              src="./assets/3 illustration.png"
+              src="./assets/hasta_illustrations/3 illustration.png"
               alt="Ardhapathaakam hand gesture"
             />
           </article>
           <article id="archive-kartharimukham">
             <h2>Kartharimukham</h2>
             <img
-              src="./assets/4 illustration.png"
+              src="./assets/hasta_illustrations/4 illustration.png"
               alt="Kartharimukham hand gesture"
             />
           </article>
@@ -84,7 +84,11 @@
           <aside class="gesture-reference">
             <p class="panel-label">Detected Hasta</p>
             <strong id="gestureName">Pathaakam</strong>
-            <img src="./assets/1 illustration.png" alt="Pathaakam reference" />
+            <img
+              id="detectedHastaImage"
+              src="./assets/hasta_illustrations/1 illustration.png"
+              alt="Pathaakam reference"
+            />
             <div class="metric">
               <span>Hold progress</span>
               <strong id="holdProgress">0%</strong>
@@ -110,6 +114,32 @@
         </div>
       </section>
     </main>
+
+    <dialog
+      id="hastaMeaningDialog"
+      class="hasta-meaning-dialog"
+      aria-labelledby="meaningHastaName"
+    >
+      <div class="hasta-meaning-card">
+        <button
+          class="meaning-close"
+          type="button"
+          aria-label="Close expanded meanings"
+        >×</button>
+        <div class="meaning-media">
+          <video id="meaningVideo" controls muted playsinline preload="metadata">
+            <source id="meaningVideoSource" src="" type="video/mp4" />
+          </video>
+          <p id="meaningPerformer"></p>
+        </div>
+        <div class="meaning-copy">
+          <p class="meaning-kicker">Usages of</p>
+          <h2 id="meaningHastaName"></h2>
+          <img id="meaningHastaImage" src="" alt="" />
+          <ul id="meaningList"></ul>
+        </div>
+      </div>
+    </dialog>
 
     <div id="archiveList" hidden></div>
     <p id="status" class="sr-only" aria-live="polite">Page ready.</p>

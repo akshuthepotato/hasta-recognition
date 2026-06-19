@@ -607,6 +607,186 @@ img {
   pointer-events: auto;
 }
 
+.hasta-meaning-dialog {
+  width: min(90rem, calc(100% - 2rem));
+  max-height: calc(100svh - 2rem);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  color: var(--walnut);
+  background: var(--forest);
+}
+
+.hasta-meaning-dialog::backdrop {
+  background: transparent;
+}
+
+.hasta-meaning-card {
+  height: min(56rem, calc(100svh - 2.7rem));
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(20rem, 0.46fr) 0.54fr;
+}
+
+.meaning-media {
+  min-width: 0;
+  min-height: 0;
+  padding: 0 0 clamp(1.5rem, 3vw, 2.5rem);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1.25rem;
+  background: var(--spice);
+}
+
+.meaning-media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: #000;
+}
+
+.meaning-media p {
+  margin: 0;
+  padding-inline: clamp(1.5rem, 3vw, 3rem);
+  color: var(--silk);
+  font-family: ui-monospace, "Courier New", monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+#meaningPerformer {
+  font-size: 0.9rem;
+}
+
+.meaning-copy {
+  min-width: 0;
+  padding: clamp(3.5rem, 5vw, 4.5rem) clamp(1.5rem, 3vw, 3rem) 2.5rem;
+  overflow-y: auto;
+  background: var(--forest);
+  text-align: center;
+}
+
+.meaning-kicker {
+  margin: 0;
+  color: var(--sun);
+  font-family: "Stellar", Georgia, serif;
+  font-size: clamp(2.1rem, 3.5vw, 3.6rem);
+  font-weight: 400;
+  line-height: 0.9;
+}
+
+.meaning-copy h2 {
+  margin: 0.7rem 0 1.5rem;
+  color: var(--sun);
+  font-size: clamp(1.8rem, 3.5vw, 3.5rem);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.meaning-copy > img {
+  width: min(18rem, 60%);
+  height: 17rem;
+  margin: 0.75rem auto 2rem;
+  object-fit: contain;
+}
+
+.meaning-copy ul {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem clamp(0.65rem, 1.5vw, 1.25rem);
+  list-style: none;
+  font-family: ui-monospace, "Courier New", monospace;
+}
+
+.meaning-copy li {
+  display: flex;
+}
+
+.meaning-copy li button {
+  width: 100%;
+  min-height: 3.1rem;
+  padding: 0.6rem;
+  border: 0;
+  border-radius: 0.4rem;
+  color: var(--sun);
+  background: var(--spice);
+  box-shadow: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+
+.meaning-copy li button:hover,
+.meaning-copy li button:focus-visible,
+.meaning-copy li button[aria-pressed="true"] {
+  color: var(--forest);
+  background: var(--sun);
+  outline: 2px solid var(--silk);
+  outline-offset: 2px;
+}
+
+.meaning-close {
+  width: 3rem;
+  height: 3rem;
+  position: absolute;
+  z-index: 2;
+  top: 1rem;
+  right: 1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--forest);
+  background: var(--sun);
+  cursor: pointer;
+  font: 2rem/1 "Archive", sans-serif;
+}
+
+.meaning-close:hover,
+.meaning-close:focus-visible {
+  color: var(--sun);
+  background: var(--spice);
+  outline: 2px solid var(--sun);
+}
+
+@media (max-width: 760px) {
+  .hasta-meaning-dialog {
+    overflow-y: auto;
+  }
+
+  .hasta-meaning-card {
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .meaning-media {
+    min-height: 28rem;
+  }
+
+  .meaning-copy {
+    overflow: visible;
+  }
+
+  .meaning-copy ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .meaning-copy ul {
+    grid-template-columns: 1fr;
+  }
+}
+
 footer {
   padding: 3rem var(--page-pad);
   display: flex;
