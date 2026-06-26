@@ -37,6 +37,7 @@ function renderHastaCard(hasta) {
     button.addEventListener("click", () => {
       source.src = videoPath(hasta, fileName);
       video.load();
+      video.play().catch(() => {});
       for (const option of list.querySelectorAll("button")) {
         option.setAttribute("aria-pressed", String(option === button));
       }
