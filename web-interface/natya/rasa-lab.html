@@ -9,6 +9,7 @@
     />
     <title>Rasa Lab | Natya Lab</title>
     <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./rasa-lab.js"></script>
   </head>
   <body class="lab-page rasa-page">
     <nav class="nav" aria-label="Main navigation">
@@ -52,7 +53,12 @@
         <aside class="rasa-reference">
           <p class="panel-label">Detected Rasa</p>
           <strong id="rasaName">Hasyam</strong>
-          <div class="expression-mark" aria-hidden="true">Hasyam</div>
+          <span id="rasaMeaning" class="rasa-meaning">Laughter</span>
+          <img
+            id="rasaIllustration"
+            src="./assets/rasa/illustrations/hasyam.png"
+            alt="Hasyam facial expression illustration"
+          />
           <div class="metric">
             <span>Expression progress</span>
             <strong id="expressionProgress">0%</strong>
@@ -65,13 +71,18 @@
 
         <div class="feed-stage rasa-feed">
           <video id="webcam" autoplay playsinline muted></video>
+          <canvas id="pausedFrame" aria-hidden="true"></canvas>
           <canvas id="overlay"></canvas>
-          <div class="camera-placeholder" aria-hidden="true">
+          <div id="cameraPlaceholder" class="camera-placeholder" aria-hidden="true">
             <span>Camera feed</span>
             <small>Expression detection will appear here</small>
           </div>
+          <button id="feedOverlay" class="feed-overlay" type="button">
+            Great job! Try another one!
+          </button>
         </div>
       </section>
     </main>
+    <p id="status" class="sr-only" aria-live="polite">Page ready.</p>
   </body>
 </html>

@@ -1,7 +1,8 @@
-const CACHE_NAME = "natya-model-v1";
+const CACHE_NAME = "natya-model-v2";
 const CACHEABLE_ASSETS = [
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm/",
   "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+  new URL("./assets/rasa/", self.location.href).href,
 ];
 
 self.addEventListener("activate", (event) => {

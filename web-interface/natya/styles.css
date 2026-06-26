@@ -463,12 +463,13 @@ img {
   margin: 0 auto;
   padding: 0.8rem;
   display: grid;
-  grid-template-columns: minmax(15rem, 0.32fr) 1fr;
+  grid-template-columns: minmax(15rem, 0.32fr) minmax(0, 1fr);
   gap: 0.8rem;
   background: var(--spice);
 }
 
 .gesture-reference {
+  min-width: 0;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -511,6 +512,7 @@ img {
 }
 
 .feed-stage {
+  min-width: 0;
   min-height: 36rem;
   position: relative;
   overflow: hidden;
@@ -846,6 +848,7 @@ footer p {
 }
 
 .rasa-reference {
+  min-width: 0;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -854,21 +857,36 @@ footer p {
 }
 
 .rasa-reference > strong {
+  height: 2.6rem;
+  flex: 0 0 2.6rem;
+  width: 100%;
   margin-top: 0.7rem;
-  font-size: 1.35rem;
-  letter-spacing: 0.16em;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
-.expression-mark {
-  min-height: 21rem;
-  display: grid;
-  place-items: end center;
-  padding-bottom: 1.5rem;
-  color: var(--candy);
-  font-family: "Stellar", Georgia, serif;
-  font-size: clamp(2rem, 5vw, 4rem);
-  border-bottom: 1px dashed rgba(232, 155, 164, 0.5);
+.rasa-meaning {
+  height: 1.2rem;
+  flex: 0 0 1.2rem;
+  color: var(--silk);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  overflow: hidden;
+}
+
+.rasa-reference > img {
+  width: 100%;
+  height: 14rem;
+  flex: 0 0 14rem;
+  margin-top: 1rem;
+  object-fit: contain;
+  transition: opacity 160ms ease;
 }
 
 .rasa-feed {
