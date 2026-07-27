@@ -87,6 +87,7 @@ img {
 
 .nav-links {
   display: flex;
+  flex-wrap: wrap;
   gap: clamp(1rem, 3vw, 2.5rem);
   color: var(--silk);
   font-size: 0.78rem;
@@ -103,6 +104,500 @@ img {
 .nav-links a:focus-visible,
 .nav-links [aria-current="page"] {
   border-color: currentColor;
+}
+
+.workbook-page {
+  min-height: 100svh;
+  background: var(--forest);
+  color: var(--silk);
+}
+
+.workbook-page .nav {
+  background: var(--spice);
+}
+
+.workbook-page .wordmark {
+  color: var(--sun);
+}
+
+.workbook {
+  background: var(--forest);
+}
+
+.workbook-match {
+  max-width: 140rem;
+  margin: 0 auto;
+  padding: clamp(3rem, 6vw, 6rem) var(--page-pad);
+}
+
+.workbook-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: clamp(2rem, 4vw, 4rem);
+}
+
+.workbook-heading .section-label,
+.workbook-diary .section-label {
+  color: var(--candy);
+}
+
+.workbook-heading h1,
+.workbook-diary h2 {
+  margin: 0.65rem 0;
+  color: var(--silk);
+  font-family: "Stellar", Georgia, serif;
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  font-weight: 400;
+  line-height: 0.8;
+}
+
+.workbook-heading h1 strong,
+.workbook-diary h2 strong {
+  color: var(--sun);
+  font-family: "Archive", sans-serif;
+  font-size: 0.78em;
+  text-transform: uppercase;
+}
+
+.workbook-heading h1 span,
+.workbook-diary h2 span {
+  color: var(--sun);
+  font-family: "Archive", sans-serif;
+  font-size: 0.78em;
+  text-transform: uppercase;
+}
+
+.workbook-heading > div > p:last-child,
+.match-status {
+  margin: 1rem 0 0;
+  color: var(--silk);
+  font-family: ui-monospace, "Courier New", monospace;
+  line-height: 1.55;
+}
+
+.workbook-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: end;
+  gap: 0.75rem;
+}
+
+.workbook-controls p {
+  margin: 0;
+  color: var(--sun);
+  font-size: 1.05rem;
+}
+
+.workbook-controls button,
+.word-chip {
+  min-height: 3rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(253, 245, 216, 0.38);
+  border-radius: 0;
+  background: transparent;
+  color: var(--silk);
+  cursor: pointer;
+  font: inherit;
+}
+
+.workbook-controls button:hover,
+.workbook-controls button:focus-visible,
+.word-chip:hover,
+.word-chip:focus-visible,
+.word-chip[aria-pressed="true"] {
+  color: var(--forest);
+  background: var(--sun);
+  outline: 2px solid var(--sun);
+  outline-offset: 2px;
+}
+
+.workbook-activity {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 4rem);
+}
+
+.hasta-pane,
+.word-bank-wrap {
+  max-height: 70svh;
+  overflow-y: auto;
+  scrollbar-color: var(--sun) rgba(253, 245, 216, 0.14);
+}
+
+.hasta-pane {
+  padding: 0.25rem;
+}
+
+.hasta-repositories {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+.hasta-repository {
+  min-height: 15rem;
+  padding: 1.25rem;
+  display: grid;
+  grid-template-rows: 7rem 2.4rem minmax(1.8rem, auto);
+  justify-items: center;
+  border: 1px solid rgba(253, 245, 216, 0.22);
+  background: rgba(95, 29, 7, 0.38);
+  cursor: pointer;
+}
+
+.hasta-repository:hover,
+.hasta-repository:focus-visible,
+.hasta-repository.is-drop-target {
+  border-color: var(--sun);
+  outline: 2px solid var(--sun);
+  outline-offset: 2px;
+}
+
+.hasta-repository img {
+  width: 7rem;
+  height: 7rem;
+  object-fit: contain;
+}
+
+.hasta-repository h2 {
+  width: 100%;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  color: var(--sun);
+  font-size: clamp(0.76rem, 1vw, 0.95rem);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.repository-words {
+  width: 100%;
+  min-height: 1.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.word-bank-wrap {
+  max-height: none;
+  overflow: visible;
+  padding: 0.25rem;
+}
+
+.word-bank-wrap h2 {
+  margin: 0 0 1rem;
+  color: var(--candy);
+  font-size: 1.35rem;
+}
+
+.word-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.word-chip {
+  background: var(--spice);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+}
+
+.repository-words .word-chip {
+  min-height: 2rem;
+  padding: 0.3rem 0.55rem;
+  border-color: var(--sun);
+  color: var(--forest);
+  background: var(--sun);
+  font-size: 0.76rem;
+}
+
+.workbook-diary {
+  min-height: 36rem;
+  padding: clamp(3rem, 6vw, 6rem) var(--page-pad);
+  background: var(--spice);
+  text-align: left;
+}
+
+.workbook-diary-inner {
+  max-width: 140rem;
+  margin: 0 auto;
+}
+
+.diary-navigation {
+  margin: clamp(1.75rem, 3vw, 2.5rem) auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.diary-navigation p {
+  width: 4.5rem;
+  margin: 0;
+  color: var(--silk);
+  font-family: ui-monospace, "Courier New", monospace;
+}
+
+.diary-navigation button,
+.diary-page-heading button {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 1px solid rgba(253, 245, 216, 0.46);
+  border-radius: 0;
+  background: transparent;
+  color: var(--silk);
+  cursor: pointer;
+  font: 2rem/1 "Archive", sans-serif;
+}
+
+.diary-navigation button:hover,
+.diary-navigation button:focus-visible,
+.diary-page-heading button:hover,
+.diary-page-heading button:focus-visible {
+  color: var(--forest);
+  background: var(--sun);
+  outline: 2px solid var(--sun);
+  outline-offset: 2px;
+}
+
+.diary-navigation button:disabled {
+  cursor: not-allowed;
+  opacity: 0.34;
+}
+
+.diary-book {
+  width: min(62rem, 100%);
+  height: 36rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: var(--silk);
+  box-shadow: 0.6rem 0.6rem 0 rgba(95, 29, 7, 0.4);
+}
+
+.diary-page {
+  min-width: 0;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  color: var(--walnut);
+}
+
+.diary-reference-page {
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 4vw, 3rem) 0;
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  border-right: 2px solid var(--candy);
+}
+
+.diary-reference-heading,
+.diary-page-heading {
+  min-height: 6rem;
+  padding: 1.25rem clamp(1.25rem, 3vw, 2rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--forest);
+  color: var(--silk);
+}
+
+.diary-reference-heading span {
+  font-family: "Stellar", Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+}
+
+.diary-reference-heading strong {
+  color: var(--sun);
+  font-size: clamp(1.45rem, 2.7vw, 2.5rem);
+  text-transform: uppercase;
+}
+
+.diary-gesture-field {
+  grid-column: 1;
+  min-height: 29rem;
+  padding: 1.25rem clamp(1.25rem, 3vw, 2rem);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  background: var(--sun);
+}
+
+.diary-gesture-field img {
+  width: min(15rem, 90%);
+  height: 23rem;
+  align-self: end;
+  margin: auto;
+  object-fit: contain;
+}
+
+.diary-prompt-glossary {
+  margin: 0;
+  padding: 0 1.25rem;
+  overflow-x: auto;
+  color: var(--spice);
+  font-size: 0.68rem;
+  line-height: 1.5;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.diary-page h3 {
+  margin: 0;
+  color: var(--sun);
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  text-transform: uppercase;
+}
+
+.diary-page-heading {
+  min-height: 0;
+  padding: 0;
+  justify-content: space-between;
+  background: transparent;
+  color: var(--walnut);
+}
+
+.diary-page-heading button {
+  flex: 0 0 auto;
+  border-color: var(--spice);
+  color: var(--spice);
+}
+
+.diary-interpretations-page {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.interpretation-list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  overflow-y: auto;
+  background: transparent;
+  list-style: none;
+  text-align: left;
+}
+
+.interpretation-list li {
+  padding: 0.75rem;
+  border-left: 3px solid var(--spice);
+  background: rgba(253, 245, 216, 0.45);
+  color: var(--spice);
+  font-family: ui-monospace, "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.diary-reference-page img {
+  grid-row: 2;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  align-self: end;
+  margin: 0;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.diary-reference-page h3 {
+  grid-row: 1;
+  width: 100%;
+  text-align: center;
+}
+
+.interpretation-dialog {
+  width: min(34rem, calc(100% - 2rem));
+  padding: 0;
+  border: 0;
+  background: var(--silk);
+  color: var(--walnut);
+}
+
+.interpretation-dialog::backdrop {
+  background: rgba(3, 58, 25, 0.78);
+}
+
+.interpretation-dialog form {
+  padding: clamp(1.5rem, 5vw, 3rem);
+  display: grid;
+  gap: 1rem;
+  position: relative;
+}
+
+.interpretation-dialog .section-label { color: var(--spice); }
+
+.interpretation-dialog h2 {
+  margin: 0;
+  color: var(--spice);
+  font-family: "Stellar", Georgia, serif;
+  font-size: 2.5rem;
+  font-weight: 400;
+}
+
+.interpretation-dialog label,
+.interpretation-dialog textarea {
+  font-family: ui-monospace, "Courier New", monospace;
+}
+
+.interpretation-dialog textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 0.75rem;
+  border: 1px solid var(--walnut);
+  border-radius: 0;
+  background: transparent;
+  color: var(--walnut);
+  font-size: 1rem;
+}
+
+.dialog-close {
+  width: 2.5rem;
+  height: 2.5rem;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border: 0;
+  background: var(--spice);
+  color: var(--silk);
+  cursor: pointer;
+  font: 1.75rem/1 "Archive", sans-serif;
+}
+
+.dialog-submit {
+  justify-self: start;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--forest);
+  color: var(--sun);
+  cursor: pointer;
+  font: inherit;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .workbook-heading { align-items: start; flex-direction: column; }
+  .workbook-controls { justify-content: start; }
+  .hasta-repositories { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+  .hasta-pane { max-height: 58svh; }
+  .hasta-repositories { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hasta-repository { min-height: 12rem; padding: 0.75rem; }
+  .hasta-repository img { width: 5rem; height: 5rem; }
+  .diary-book { height: auto; grid-template-columns: 1fr; }
+  .diary-reference-page { border-right: 0; border-bottom: 2px solid var(--candy); }
 }
 
 .hero {
@@ -1067,6 +1562,140 @@ footer p {
   background-size: 4rem 4rem;
 }
 
+.rasa-journal-page {
+  min-height: 100svh;
+  background: var(--spice);
+  color: var(--silk);
+}
+
+.rasa-journal-page .nav {
+  background: var(--forest);
+}
+
+.rasa-journal-page .wordmark {
+  color: var(--sun);
+}
+
+.rasa-journal {
+  min-height: calc(100svh - 5rem);
+  padding: clamp(3rem, 7vw, 6rem) var(--page-pad);
+  background-color: var(--walnut);
+}
+
+.rasa-journal-heading,
+.rasa-prompts {
+  max-width: 86rem;
+  margin-inline: auto;
+}
+
+.rasa-journal-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.rasa-journal-heading h1,
+.rasa-prompt h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.rasa-journal-heading h1 strong {
+  font-family: "Archive", sans-serif;
+}
+
+.rasa-journal-heading h1 span,
+.rasa-prompt h2 span {
+  color: var(--candy);
+}
+
+.rasa-journal-heading p {
+  margin: 0;
+  font-family: ui-monospace, "Courier New", monospace;
+  font-size: clamp(0.78rem, 1.4vw, 1rem);
+}
+
+.rasa-prompts {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+}
+
+.rasa-prompt {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.78fr) minmax(7rem, 0.36fr) minmax(0, 2.2fr);
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  column-gap: clamp(0.5rem, 2vw, 2rem);
+}
+
+.rasa-prompt h2 {
+  grid-row: 1 / -1;
+}
+
+.rasa-prompt img {
+  grid-row: 1 / -1;
+  align-self: end;
+  width: min(100%, 9rem);
+  max-height: 10rem;
+  justify-self: center;
+  object-fit: contain;
+  object-position: bottom;
+}
+
+.rasa-prompt label {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.rasa-prompt textarea {
+  grid-column: 3;
+  width: 100%;
+  min-height: 7rem;
+  padding: 1.1rem 1.25rem;
+  resize: vertical;
+  border: 0;
+  border-radius: 0;
+  background: var(--silk);
+  color: var(--walnut);
+  font: 0.9rem/1.45 ui-monospace, "Courier New", monospace;
+}
+
+.rasa-prompt textarea:focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: 3px;
+}
+
+.rasa-prompt button {
+  grid-column: 3;
+  justify-self: end;
+  margin: -2.1rem 0.6rem 0 0;
+  z-index: 1;
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--spice);
+  color: var(--sun);
+  cursor: pointer;
+  font: 0.67rem "Archive", sans-serif;
+  text-transform: uppercase;
+}
+
+.rasa-prompt button:hover,
+.rasa-prompt button:focus-visible {
+  background: var(--forest);
+  outline: 2px solid var(--sun);
+  outline-offset: 2px;
+}
+
 .sr-only {
   width: 1px;
   height: 1px;
@@ -1155,6 +1784,19 @@ footer p {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .rasa-prompt {
+    grid-template-columns: minmax(7rem, 0.7fr) minmax(4.5rem, 0.35fr) minmax(0, 1.6fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .rasa-journal-heading { align-items: start; flex-direction: column; }
+  .rasa-prompt { grid-template-columns: 1fr minmax(5rem, 0.45fr); grid-template-rows: auto auto auto; row-gap: 0.75rem; }
+  .rasa-prompt h2 { grid-row: auto; }
+  .rasa-prompt img { grid-row: 1 / span 2; max-height: 7rem; }
+  .rasa-prompt textarea, .rasa-prompt button { grid-column: 1 / -1; }
+  .rasa-prompt textarea { min-height: 6rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

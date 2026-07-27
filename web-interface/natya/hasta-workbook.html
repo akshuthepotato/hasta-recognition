@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Match Bharatanatyam hasta meanings in the Natya Lab workbook." />
+    <title>Hasta Workbook | Natya Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./hasta-workbook.js"></script>
+  </head>
+  <body class="lab-page workbook-page">
+    <nav class="nav" aria-label="Main navigation">
+      <a class="wordmark" href="./index.html"><strong>Natya</strong><span>Lab</span></a>
+      <div class="nav-links">
+        <a href="./index.html#about">About</a>
+        <a href="./hasta-archive.html">Hasta Archive</a>
+        <a href="./hasta-workbook.html" aria-current="page">Hasta Workbook</a>
+        <a href="./hasta-lab.html">Hasta Lab</a>
+        <a href="./rasa-lab.html">Rasa Lab</a>
+        <a href="./rasa-journal.html">Rasa Journal</a>
+      </div>
+    </nav>
+
+    <main class="workbook">
+      <section class="workbook-match" aria-labelledby="matchTitle">
+        <div class="workbook-heading">
+          <div>
+            <p class="section-label">Hasta workbook</p>
+            <h1 id="matchTitle"><strong>Hasta</strong> <span>Match</span></h1>
+            <p>Drag each word onto the hasta it brings to mind. There are no right answers, and each hasta can hold more than one word.</p>
+          </div>
+          <div class="workbook-controls">
+            <button id="resetMatch" type="button">Reset <span aria-hidden="true">&#8635;</span></button>
+          </div>
+        </div>
+
+        <div class="workbook-activity">
+          <section class="hasta-pane" aria-label="Hasta repositories">
+            <div id="hastaRepositories" class="hasta-repositories"></div>
+          </section>
+          <aside class="word-bank-wrap">
+            <h2>Words to place</h2>
+            <div id="wordBank" class="word-bank" aria-label="Words to place"></div>
+            <p id="matchStatus" class="match-status" aria-live="polite">Choose a word, then choose a hasta repository to place it.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="workbook-diary" aria-labelledby="diaryTitle">
+        <div class="workbook-diary-inner">
+          <p class="section-label">Hasta workbook</p>
+          <h2 id="diaryTitle"><strong>Hasta</strong> <span>Diary</span></h2>
+          <div class="diary-navigation" aria-label="Diary page navigation">
+            <button id="previousDiaryPage" type="button" aria-label="Previous hasta">&larr;</button>
+            <p id="diaryPageLabel" aria-live="polite"></p>
+            <button id="nextDiaryPage" type="button" aria-label="Next hasta">&rarr;</button>
+          </div>
+          <div class="diary-book">
+            <article class="diary-page diary-reference-page">
+              <img id="diaryHastaImage" src="" alt="" />
+              <h3 id="diaryHastaName"></h3>
+            </article>
+            <article class="diary-page diary-interpretations-page" aria-labelledby="interpretationsTitle">
+              <div class="diary-page-heading">
+                <h3 id="interpretationsTitle">My interpretations</h3>
+                <button id="addInterpretation" type="button" aria-label="Add interpretation">+</button>
+              </div>
+              <ul id="interpretationList" class="interpretation-list"></ul>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="interpretationDialog" class="interpretation-dialog" aria-labelledby="interpretationDialogTitle">
+      <form id="interpretationForm" method="dialog">
+        <button class="dialog-close" type="button" value="cancel" aria-label="Close">&times;</button>
+        <p class="section-label">Hasta diary</p>
+        <h2 id="interpretationDialogTitle">New interpretation</h2>
+        <label for="interpretationText">What does this hasta bring to mind?</label>
+        <textarea id="interpretationText" name="interpretation" rows="5" required></textarea>
+        <button class="dialog-submit" type="submit">Add interpretation</button>
+      </form>
+    </dialog>
+  </body>
+</html>
