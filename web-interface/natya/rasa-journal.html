@@ -6,6 +6,7 @@
     <meta name="description" content="Reflect on the rasas in your week with Natya Lab." />
     <title>Rasa Journal | Natya Lab</title>
     <link rel="stylesheet" href="./styles.css" />
+    <script src="./rasa-journal.js" defer></script>
   </head>
   <body class="rasa-journal-page">
     <nav class="nav" aria-label="Main navigation">
@@ -17,48 +18,54 @@
         <a href="./hasta-lab.html">Hasta Lab</a>
         <a href="./rasa-lab.html">Rasa Lab</a>
         <a href="./rasa-journal.html" aria-current="page">Rasa Journal</a>
+        <a href="./story-portal.html">Story Portal</a>
       </div>
     </nav>
 
-    <main class="rasa-journal texture">
+    <main class="rasa-journal" data-story-api="https://hasta-recognition-holy-darkness-1170.fly.dev/api/stories">
       <header class="rasa-journal-heading">
-        <h1><strong>The <span>Rasa</span> Journal:</strong></h1>
-        <p>Pick the feeling that matched your week, then tell us the story. We will turn it into movement next class.</p>
+        <h1><strong>Rasa</strong> Journal</h1>
+        <h2>Your story matters</h2>
+        <p>Write about something that happened to you this week.<br />How did you feel about it? Share your story with us.</p>
       </header>
 
-      <section class="rasa-prompts" aria-label="Rasa journal prompts">
-        <article class="rasa-prompt">
-          <h2>I felt <span>happy</span></h2>
-          <img src="./assets/rasa/illustrations/hasyam.png" alt="Hasyam rasa illustration" />
-          <label for="happy-story">Tell your story about a happy moment</label>
-          <textarea id="happy-story" rows="4" placeholder="Tell your story..."></textarea>
-          <button type="button">Submit your story</button>
-        </article>
+      <section class="rasa-story-entry" aria-label="Write and tag your story">
+        <label for="story">Your story</label>
+        <div id="selectedRasa" class="selected-rasa" aria-hidden="true" hidden>
+          <img id="selectedRasaImage" alt="" />
+          <span id="selectedRasaName"></span>
+        </div>
+        <textarea id="story" rows="9" placeholder="Hi, type your story here"></textarea>
+        <button id="submitStory" type="button">Submit story</button>
+      </section>
 
-        <article class="rasa-prompt">
-          <h2>I felt <span>scared</span></h2>
-          <img src="./assets/rasa/illustrations/bhayanakam.png" alt="Bhayanakam rasa illustration" />
-          <label for="scared-story">Tell your story about a scary moment</label>
-          <textarea id="scared-story" rows="4" placeholder="Tell your story..."></textarea>
-          <button type="button">Submit your story</button>
-        </article>
-
-        <article class="rasa-prompt">
-          <h2>I was <span>surprised</span></h2>
-          <img src="./assets/rasa/illustrations/adbutham.png" alt="Adbutham rasa illustration" />
-          <label for="surprised-story">Tell your story about a surprising moment</label>
-          <textarea id="surprised-story" rows="4" placeholder="Tell your story..."></textarea>
-          <button type="button">Submit your story</button>
-        </article>
-
-        <article class="rasa-prompt">
-          <h2>I felt <span>peaceful</span></h2>
-          <img src="./assets/rasa/illustrations/shantham.png" alt="Shantham rasa illustration" />
-          <label for="peaceful-story">Tell your story about a peaceful moment</label>
-          <textarea id="peaceful-story" rows="4" placeholder="Tell your story..."></textarea>
-          <button type="button">Submit your story</button>
-        </article>
+      <section class="rasa-picker" aria-labelledby="rasaPickerTitle">
+        <p id="rasaPickerTitle">How has your week been so far? <span>Drag and drop the rasa you relate the most into the textbox.</span></p>
+        <div class="rasa-options">
+          <button type="button" class="rasa-option" draggable="true" data-rasa="Karuna">
+            <span>Karuna</span><img src="./assets/rasa/illustrations/Karuna.png" alt="Karuna, compassion" />
+          </button>
+          <button type="button" class="rasa-option" draggable="true" data-rasa="Raudram">
+            <span>Raudram</span><img src="./assets/rasa/illustrations/raudram.png" alt="Raudram, anger" />
+          </button>
+          <button type="button" class="rasa-option" draggable="true" data-rasa="Hasyam">
+            <span>Hasyam</span><img src="./assets/rasa/illustrations/hasyam.png" alt="Hasyam, laughter" />
+          </button>
+          <button type="button" class="rasa-option" draggable="true" data-rasa="Veeram">
+            <span>Veeram</span><img src="./assets/rasa/illustrations/Veeram.png" alt="Veeram, courage" />
+          </button>
+          <button type="button" class="rasa-option" draggable="true" data-rasa="Adbutham">
+            <span>Adbutha</span><img src="./assets/rasa/illustrations/adbutham.png" alt="Adbutham, surprise" />
+          </button>
+          <button type="button" class="rasa-option" draggable="true" data-rasa="Shantham">
+            <span>Shantham</span><img src="./assets/rasa/illustrations/shantham.png" alt="Shantham, peace" />
+          </button>
+          <button type="button" class="rasa-option" draggable="true" data-rasa="Bhayanakam">
+            <span>Bhayanakam</span><img src="./assets/rasa/illustrations/bhayanakam.png" alt="Bhayanakam, fear" />
+          </button>
+        </div>
       </section>
     </main>
+    <p id="journalStatus" class="sr-only" aria-live="polite"></p>
   </body>
 </html>

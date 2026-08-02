@@ -3,12 +3,15 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from itertools import combinations
 from pathlib import Path
 
 import numpy as np
-from websockets.asyncio.server import serve
+from aiohttp import WSMsgType, web
+from pymongo import MongoClient
 from xgboost import XGBClassifier
 
 DEFAULT_CLASSIFIER_FILENAME = "xgboost_hand_classifier.json"
@@ -332,23 +335,89 @@ def build_response(
     return json.dumps(payload)
 
 
-async def handle_connection(websocket, classifier: LandmarkMudraClassifier) -> None:
-    client = websocket.remote_address
+async def handle_connection(request: web.Request) -> web.WebSocketResponse:
+    websocket = web.WebSocketResponse()
+    await websocket.prepare(request)
+    classifier: LandmarkMudraClassifier = request.app["classifier"]
+    client = request.remote
     print(f"client connected: {client}")
 
     try:
-        async for message in websocket:
-            payload = json.loads(message)
+        async for websocket_message in websocket:
+            if websocket_message.type != WSMsgType.TEXT:
+                continue
+            payload = json.loads(websocket_message.data)
             hands = payload.get("hands", [])
             timestamp = payload.get("timestamp")
             prediction = classifier.predict(hands)
-            await websocket.send(build_response(prediction, timestamp))
+            await websocket.send_str(build_response(prediction, timestamp))
     except json.JSONDecodeError as error:
         print(f"received invalid JSON: {error}")
     except ValueError as error:
         print(f"invalid input payload: {error}")
     finally:
         print(f"client disconnected: {client}")
+    return websocket
+
+
+def cors_headers(origin: str | None, allowed_origins: list[str]) -> dict[str, str]:
+    allowed_origin = "*" if "*" in allowed_origins else origin if origin in allowed_origins else None
+    headers = {
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, X-Story-Pin",
+    }
+    if allowed_origin:
+        headers["Access-Control-Allow-Origin"] = allowed_origin
+        if allowed_origin != "*":
+            headers["Vary"] = "Origin"
+    return headers
+
+
+def story_document(payload: dict) -> dict:
+    story = str(payload.get("story", "")).strip()
+    if not story or len(story) > 5000:
+        raise ValueError("Story must be between 1 and 5000 characters.")
+    rasa = str(payload.get("rasa", "")).strip()[:100] or None
+    week = payload.get("week")
+    if week is not None and (not isinstance(week, int) or week < 1):
+        raise ValueError("Week must be a positive integer.")
+    return {"story": story, "rasa": rasa, "week": week}
+
+
+def serialise_story(story: dict) -> dict:
+    return {
+        "id": str(story["_id"]),
+        "story": story["story"],
+        "rasa": story.get("rasa"),
+        "week": story.get("week"),
+        "createdAt": story["createdAt"].isoformat(),
+    }
+
+
+async def handle_api(request: web.Request) -> web.Response:
+    headers = cors_headers(request.headers.get("Origin"), request.app["allowed_origins"])
+    if request.method == "OPTIONS":
+        return web.Response(status=204, headers=headers)
+    stories = request.app["stories"]
+    story_pin = request.app["story_pin"]
+    if request.method == "GET":
+        if request.headers.get("X-Story-Pin") != story_pin:
+            return web.json_response({"error": "Teacher PIN required."}, status=401, headers=headers)
+        return web.json_response({"stories": [
+            serialise_story(story) for story in stories.find().sort("createdAt", -1)
+        ]}, headers=headers)
+    if request.method != "POST":
+        return web.json_response({"error": "Method not allowed."}, status=405, headers=headers)
+    try:
+        payload = await request.json()
+        if not isinstance(payload, dict):
+            raise ValueError("Request body must be an object.")
+        document = story_document(payload)
+        document["createdAt"] = datetime.now(timezone.utc)
+        document["_id"] = stories.insert_one(document).inserted_id
+        return web.json_response({"story": serialise_story(document)}, status=201, headers=headers)
+    except (json.JSONDecodeError, ValueError) as error:
+        return web.json_response({"error": str(error)}, status=400, headers=headers)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -362,6 +431,22 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_SERVER_CLASSIFIER_PATH,
         help="Path to the trained XGBoost classifier JSON.",
+    )
+    parser.add_argument(
+        "--mongodb-uri",
+        default=os.environ.get("MONGODB_URI"),
+        help="MongoDB connection string; defaults to MONGODB_URI.",
+    )
+    parser.add_argument(
+        "--cors-origin",
+        action="append",
+        default=["https://natyalab.com"],
+        help="Allowed frontend origin; repeat for more than one.",
+    )
+    parser.add_argument(
+        "--story-portal-pin",
+        default=os.environ.get("STORY_PORTAL_PIN", "0000"),
+        help="Teacher PIN for reading stories; defaults to STORY_PORTAL_PIN or 0000.",
     )
     parser.add_argument(
         "--labels-path",
@@ -394,18 +479,34 @@ def validate_paths(classifier_path: Path, labels_path: Path) -> None:
 async def main() -> None:
     args = build_parser().parse_args()
     validate_paths(args.classifier_path, args.labels_path)
+    if not args.mongodb_uri:
+        raise ValueError("Set MONGODB_URI before starting the story API.")
+    mongo_client = MongoClient(args.mongodb_uri)
+    stories = mongo_client["natya_lab"]["stories"]
+    stories.create_index("createdAt")
     classifier = LandmarkMudraClassifier(
         classifier_path=args.classifier_path,
         labels_path=args.labels_path,
         confidence_threshold=args.classification_threshold,
     )
-    async with serve(
-        lambda websocket: handle_connection(websocket, classifier),
-        args.host,
-        args.port,
-    ):
-        print(f"websocket server listening on ws://{args.host}:{args.port}")
+    app = web.Application()
+    app["classifier"] = classifier
+    app["stories"] = stories
+    app["allowed_origins"] = args.cors_origin
+    app["story_pin"] = args.story_portal_pin
+    app.router.add_get("/", handle_connection)
+    app.router.add_route("*", "/api/stories", handle_api)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, args.host, args.port)
+    await site.start()
+    print(f"server listening on ws://{args.host}:{args.port} and http://{args.host}:{args.port}/api/stories")
+    try:
         await asyncio.Future()
+    finally:
+        mongo_client.close()
+        await runner.cleanup()
 
 
 if __name__ == "__main__":

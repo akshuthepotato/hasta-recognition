@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A private collection of Rasa Journal stories for Natya Lab teachers." />
+    <title>Story Portal | Natya Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./story-portal.js" defer></script>
+  </head>
+  <body class="story-portal-page" data-story-api="https://hasta-recognition-holy-darkness-1170.fly.dev/api/stories">
+    <nav class="nav" aria-label="Main navigation">
+      <a class="wordmark" href="./index.html"><strong>Natya</strong><span>Lab</span></a>
+      <div class="nav-links">
+        <a href="./index.html#about">About</a>
+        <a href="./hasta-archive.html">Hasta Archive</a>
+        <a href="./hasta-workbook.html">Hasta Workbook</a>
+        <a href="./hasta-lab.html">Hasta Lab</a>
+        <a href="./rasa-lab.html">Rasa Lab</a>
+        <a href="./rasa-journal.html">Rasa Journal</a>
+        <a href="./story-portal.html" aria-current="page">Story Portal</a>
+      </div>
+    </nav>
+
+    <main class="story-portal">
+      <header class="story-portal-heading">
+        <h1><strong>Story</strong> Portal</h1>
+        <p>Supporting meaningful storytelling through Bharatanatyam.</p>
+      </header>
+
+      <section class="story-portal-guide" aria-label="How to use the story portal">
+        <p>Explore stories submitted by your students and use them to plan expressive Bharatanatyam activities for your next class.</p>
+        <p>View all stories submitted by this student and observe how their confidence, imagination and expressive abilities develop over time.</p>
+        <p>Select the stories you can explore with the children during the upcoming dance class.</p>
+      </section>
+
+      <section class="story-carousel" aria-label="Submitted stories">
+        <button id="previousStories" class="story-arrow" type="button" aria-label="Show previous stories">‹</button>
+        <div id="storyList" class="story-list" aria-live="polite">
+          <p class="story-status">Loading stories…</p>
+        </div>
+        <button id="nextStories" class="story-arrow" type="button" aria-label="Show next stories">›</button>
+      </section>
+    </main>
+
+    <div id="pinGate" class="pin-gate" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+      <form id="pinForm" class="pin-card">
+        <p class="panel-label">Natya Lab</p>
+        <h1 id="pinTitle"><strong>Story</strong> Portal</h1>
+        <label for="storyPin">Enter teacher PIN</label>
+        <input id="storyPin" name="pin" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="4" required autofocus />
+        <p id="pinError" class="pin-error" aria-live="polite"></p>
+        <button type="submit">Enter portal</button>
+      </form>
+    </div>
+  </body>
+</html>

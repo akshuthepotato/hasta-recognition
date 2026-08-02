@@ -3,3 +3,22 @@ fly.toml
 __pycache__/
 .envrc
 .venv/
+
+# Local environment and tool artifacts
+.DS_Store
+.agents/
+.codex/
+.mplconfig/
+.pytest_cache/
+.ruff_cache/
+
+# Training data and development-only artifacts
+data/
+data-bak/
+data-subsampled/
+models/
+*.ipynb
+
+# The Fly image serves only web-interface/server.
+web-interface/client/
+web-interface/natya/

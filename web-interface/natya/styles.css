@@ -1568,27 +1568,176 @@ footer p {
   color: var(--silk);
 }
 
-.rasa-journal-page .nav {
+.rasa-journal-page .nav,
+.story-portal-page .nav {
   background: var(--forest);
+  color: var(--silk);
 }
 
 .rasa-journal-page .wordmark {
   color: var(--sun);
 }
 
+.rasa-journal-page { background: var(--candy); }
+
 .rasa-journal {
   min-height: calc(100svh - 5rem);
-  padding: clamp(3rem, 7vw, 6rem) var(--page-pad);
-  background-color: var(--walnut);
+  padding: clamp(3.5rem, 7vw, 6.5rem) var(--page-pad) 0;
+  background-color: var(--candy);
 }
 
-.rasa-journal-heading,
-.rasa-prompts {
+.rasa-journal-heading {
+  display: block;
+  max-width: 62rem;
+  margin: 0 auto clamp(2.3rem, 4vw, 3.5rem);
+  text-align: center;
+  color: var(--walnut);
+}
+
+.rasa-journal-heading h1 {
+  margin: 0;
+  font: clamp(3.5rem, 9vw, 7.8rem)/0.86 "Stellar", Georgia, serif;
+}
+
+.rasa-journal-heading h1 strong {
+  font-family: "Archive", sans-serif;
+  font-size: 0.83em;
+  text-transform: uppercase;
+}
+
+.rasa-journal-heading h2 {
+  margin: clamp(2rem, 4vw, 3rem) 0 1.3rem;
+  font: clamp(1.35rem, 3vw, 2.2rem)/1 "Archive", sans-serif;
+  text-transform: uppercase;
+}
+
+.rasa-journal-heading p {
+  margin: 0;
+  font: clamp(0.88rem, 1.7vw, 1.12rem)/1.45 ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+}
+
+.rasa-story-entry {
+  position: relative;
+  max-width: 88rem;
+  margin: 0 auto;
+  padding-top: 1.7rem;
+  display: grid;
+  grid-template-columns: 0 1fr;
+  transition: grid-template-columns 180ms ease;
+}
+
+.rasa-story-entry.has-rasa { grid-template-columns: minmax(8rem, 18rem) 1fr; }
+
+.rasa-story-entry::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1.7rem;
+  padding: 0.3rem 0.75rem;
+  background: var(--spice);
+  color: var(--candy);
+  content: "−  ×";
+  font: 1.2rem/1 "Archive", sans-serif;
+  letter-spacing: 0.2rem;
+}
+
+.rasa-story-entry label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+
+.rasa-story-entry textarea {
+  display: block;
+  grid-column: 2;
+  width: 100%;
+  min-height: clamp(16rem, 25vw, 23rem);
+  padding: 1.35rem;
+  resize: vertical;
+  border: 0;
+  border-radius: 0;
+  background: var(--silk);
+  color: var(--walnut);
+  font: clamp(0.95rem, 1.6vw, 1.2rem)/1.5 ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+}
+
+.rasa-story-entry textarea::placeholder { color: rgba(95, 29, 7, 0.42); }
+.rasa-story-entry textarea:focus-visible { outline: 3px solid var(--forest); outline-offset: 3px; }
+.rasa-story-entry textarea.is-drop-target { outline: 4px dashed var(--forest); outline-offset: -0.7rem; }
+
+.selected-rasa {
+  grid-column: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-width: 0;
+  padding: 1rem;
+  background: var(--sun);
+  color: var(--walnut);
+  overflow: hidden;
+  font: 0.8rem "Archive", sans-serif;
+  text-transform: uppercase;
+}
+
+.selected-rasa[hidden] { display: none; }
+.selected-rasa img { width: min(100%, 10rem); max-height: 13rem; object-fit: contain; }
+.selected-rasa span { margin-top: 0.6rem; text-align: center; }
+
+.rasa-story-entry button {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  border: 0;
+  border-radius: 0;
+  padding: 0.7rem 0.9rem;
+  background: var(--spice);
+  color: var(--sun);
+  cursor: pointer;
+  font: 0.75rem "Archive", sans-serif;
+  text-transform: uppercase;
+}
+
+.rasa-picker {
+  margin: clamp(4rem, 7vw, 7rem) calc(var(--page-pad) * -1) 0;
+  padding: 1.4rem var(--page-pad) 1.8rem;
+  background-color: var(--walnut);
+  color: var(--sun);
+  text-align: center;
+}
+
+.rasa-picker > p {
+  margin: 0 auto 1.8rem;
+  font: clamp(0.88rem, 1.7vw, 1.1rem)/1.5 ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+}
+
+.rasa-picker > p span { color: var(--candy); }
+
+.rasa-options {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(5rem, 1fr));
+  max-width: 78rem;
+  margin: auto;
+  gap: 1rem;
+}
+
+.rasa-option {
+  border: 0;
+  background: none;
+  color: var(--candy);
+  cursor: grab;
+  font: 0.75rem "Archive", sans-serif;
+}
+
+.rasa-option:active { cursor: grabbing; }
+.rasa-option:focus-visible, .rasa-option.is-selected { outline: 3px solid var(--sun); outline-offset: 0.25rem; }
+.rasa-option span { display: block; margin-bottom: 0.45rem; }
+.rasa-option img { width: min(100%, 7rem); height: 7.5rem; margin: auto; object-fit: contain; object-position: bottom; }
+
+.rasa-journal.legacy .rasa-journal-heading,
+.rasa-journal.legacy .rasa-prompts {
   max-width: 86rem;
   margin-inline: auto;
 }
 
-.rasa-journal-heading {
+.rasa-journal.legacy .rasa-journal-heading {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -1596,7 +1745,7 @@ footer p {
   margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
 }
 
-.rasa-journal-heading h1,
+.rasa-journal.legacy .rasa-journal-heading h1,
 .rasa-prompt h2 {
   margin: 0;
   font-size: clamp(1.5rem, 3vw, 2.5rem);
@@ -1604,16 +1753,16 @@ footer p {
   text-transform: uppercase;
 }
 
-.rasa-journal-heading h1 strong {
+.rasa-journal.legacy .rasa-journal-heading h1 strong {
   font-family: "Archive", sans-serif;
 }
 
-.rasa-journal-heading h1 span,
+.rasa-journal.legacy .rasa-journal-heading h1 span,
 .rasa-prompt h2 span {
   color: var(--candy);
 }
 
-.rasa-journal-heading p {
+.rasa-journal.legacy .rasa-journal-heading p {
   margin: 0;
   font-family: ui-monospace, "Courier New", monospace;
   font-size: clamp(0.78rem, 1.4vw, 1rem);
@@ -1695,6 +1844,172 @@ footer p {
   outline: 2px solid var(--sun);
   outline-offset: 2px;
 }
+
+.story-portal-page {
+  min-height: 100svh;
+  background: var(--walnut);
+  color: var(--walnut);
+}
+
+.story-portal-page .wordmark {
+  color: var(--sun);
+}
+
+.story-portal {
+  min-height: calc(100svh - 5rem);
+  padding: clamp(3.5rem, 8vw, 7rem) var(--page-pad) 0;
+  background-color: var(--sun);
+}
+
+.story-portal-heading,
+.story-portal-guide {
+  max-width: 76rem;
+  margin-inline: auto;
+}
+
+.story-portal-heading h1 {
+  margin: 0;
+  text-align: center;
+  color: var(--spice);
+  font: clamp(3.6rem, 9vw, 8rem)/0.85 "Stellar", Georgia, serif;
+}
+
+.story-portal-heading h1 strong {
+  font-family: "Archive", sans-serif;
+  font-size: 0.85em;
+  text-transform: uppercase;
+}
+
+.story-portal-heading p {
+  margin: 1.7rem 0 0;
+  text-align: center;
+  font: clamp(0.88rem, 1.6vw, 1.1rem)/1.4 ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+}
+
+.story-portal-guide {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  margin: clamp(5rem, 11vw, 10rem) auto clamp(3.5rem, 7vw, 6rem);
+  font: 0.88rem/1.55 ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+}
+
+.story-portal-guide p { margin: 0; }
+
+.pin-card button {
+  border: 0;
+  border-radius: 0;
+  background: var(--spice);
+  color: var(--sun);
+  cursor: pointer;
+  font: 1rem "Archive", sans-serif;
+  text-transform: uppercase;
+}
+
+.pin-card button:hover,
+.pin-card button:focus-visible { outline: 3px solid var(--forest); outline-offset: 3px; }
+
+.story-carousel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: stretch;
+  margin-inline: calc(var(--page-pad) * -1);
+  background: var(--walnut);
+}
+
+.story-arrow {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  z-index: 1;
+  border: 2px solid var(--sun);
+  background: var(--walnut);
+  color: var(--sun);
+  cursor: pointer;
+  font: 2rem/1 "Stellar", Georgia, serif;
+}
+
+.story-arrow:disabled { cursor: default; opacity: 0.25; }
+.story-arrow:hover,
+.story-arrow:focus-visible { background: var(--forest); outline: 2px solid var(--silk); outline-offset: 3px; }
+
+.story-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.3rem;
+  margin: 0;
+  padding: clamp(3.5rem, 6vw, 6rem) var(--page-pad);
+  min-height: 23rem;
+  background-color: var(--walnut);
+}
+
+.story-card {
+  min-height: 16rem;
+  padding: 0.55rem 1rem 1rem;
+  cursor: pointer;
+  outline: 3px solid transparent;
+  color: var(--walnut);
+  font: 0.82rem/1.55 ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+}
+
+.story-card.has-rasa {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.8fr) minmax(0, 1.2fr);
+  grid-template-rows: auto 1fr;
+  column-gap: 1rem;
+}
+
+.story-card:focus-visible,
+.story-card.is-selected { outline-color: var(--forest); }
+.story-card-0 { background: #efc849; }
+.story-card-1 { background: var(--spice); color: var(--silk); }
+.story-card-2 { background: var(--silk); }
+.story-card-3 { background: #efc849; }
+.story-card p { margin: 1.1rem 0 1rem; white-space: pre-wrap; }
+.story-card.has-rasa .story-controls { grid-column: 1 / -1; }
+.story-card.has-rasa p { grid-column: 2; align-self: center; margin: 0; }
+.story-controls { color: var(--spice); font: 1.35rem/1 "Archive", sans-serif; letter-spacing: 0.2rem; }
+.story-card-1 .story-controls { color: var(--candy); }
+.story-rasa { grid-column: 1; display: grid; align-content: center; justify-items: center; min-width: 0; color: currentColor; font: 0.72rem "Archive", sans-serif; text-align: center; text-transform: uppercase; }
+.story-rasa img { width: min(100%, 10rem); height: 11rem; object-fit: contain; object-position: bottom; }
+.story-rasa span { margin-top: 0.45rem; }
+
+.story-status {
+  grid-column: 1 / -1;
+  margin: auto;
+  color: var(--silk);
+  font: 0.9rem ui-monospace, "Courier New", monospace;
+}
+
+.pin-gate {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(3, 58, 25, 0.88);
+}
+
+.pin-gate[hidden] { display: none; }
+.pin-card {
+  width: min(100%, 26rem);
+  padding: 2.5rem;
+  background: var(--sun);
+  box-shadow: 0.8rem 0.8rem 0 var(--spice);
+}
+
+.pin-card h1 { margin: 0.4rem 0 2rem; color: var(--spice); font: 2.2rem/0.95 "Stellar", Georgia, serif; }
+.pin-card h1 strong { font-family: "Archive", sans-serif; text-transform: uppercase; }
+.pin-card label { display: block; margin-bottom: 0.45rem; font: 0.8rem ui-monospace, "Courier New", monospace; font-weight: 700; }
+.pin-card input { width: 100%; padding: 0.7rem; border: 2px solid var(--walnut); border-radius: 0; background: var(--silk); color: var(--walnut); font: 1.5rem ui-monospace, "Courier New", monospace; letter-spacing: 0.4em; }
+.pin-card button { width: 100%; margin-top: 1rem; padding: 0.85rem; }
+.pin-error { min-height: 1.2rem; margin: 0.6rem 0 0; color: var(--spice); font: 0.78rem ui-monospace, "Courier New", monospace; }
 
 .sr-only {
   width: 1px;
@@ -1791,7 +2106,7 @@ footer p {
 }
 
 @media (max-width: 560px) {
-  .rasa-journal-heading { align-items: start; flex-direction: column; }
+  .rasa-journal.legacy .rasa-journal-heading { align-items: start; flex-direction: column; }
   .rasa-prompt { grid-template-columns: 1fr minmax(5rem, 0.45fr); grid-template-rows: auto auto auto; row-gap: 0.75rem; }
   .rasa-prompt h2 { grid-row: auto; }
   .rasa-prompt img { grid-row: 1 / span 2; max-height: 7rem; }
@@ -1803,4 +2118,19 @@ footer p {
   html {
     scroll-behavior: auto;
   }
+}
+
+@media (max-width: 760px) {
+  .story-portal-guide { grid-template-columns: 1fr; gap: 1.5rem; margin-top: 4rem; }
+  .rasa-options { grid-template-columns: repeat(4, minmax(5rem, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .story-portal { padding-top: 3rem; }
+  .story-portal-heading h1 { font-size: clamp(3rem, 17vw, 5rem); }
+  .story-list { grid-template-columns: 1fr; }
+  .story-card { min-height: 12rem; }
+  .pin-card { padding: 2rem 1.5rem; }
+  .rasa-story-entry.has-rasa { grid-template-columns: minmax(5.5rem, 7rem) 1fr; }
+  .rasa-options { grid-template-columns: repeat(2, minmax(5rem, 1fr)); }
 }
