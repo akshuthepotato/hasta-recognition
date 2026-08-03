@@ -19,6 +19,8 @@
   --silk: #fdf5d8;
   --line: rgba(253, 245, 216, 0.34);
   --page-pad: clamp(1.25rem, 5vw, 5rem);
+  /* ponytail: 699/659 matches Stellar and Archive cap heights. */
+  --archive-cap-match: 1.061em;
 }
 
 * {
@@ -81,7 +83,7 @@ img {
 
 .wordmark strong {
   font-family: "Archive", sans-serif;
-  font-size: 0.76em;
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -201,7 +203,7 @@ img {
 .workbook-diary h2 strong {
   color: var(--sun);
   font-family: "Archive", sans-serif;
-  font-size: 0.78em;
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -209,7 +211,7 @@ img {
 .workbook-diary h2 span {
   color: var(--sun);
   font-family: "Archive", sans-serif;
-  font-size: 0.78em;
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -449,14 +451,18 @@ img {
   color: var(--silk);
 }
 
+.diary-reference-heading {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+}
+
 .diary-reference-heading span {
   font-family: "Stellar", Georgia, serif;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-size: 1em;
 }
 
 .diary-reference-heading strong {
   color: var(--sun);
-  font-size: clamp(1.45rem, 2.7vw, 2.5rem);
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -729,7 +735,7 @@ img {
 .hero h1 span {
   color: var(--sun);
   font-family: "Archive", sans-serif;
-  font-size: 0.73em;
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -818,7 +824,7 @@ img {
 .current-method-heading strong {
   color: var(--sun);
   font-family: "Archive", sans-serif;
-  font-size: 0.78em;
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -909,7 +915,7 @@ img {
 .lab-heading h1 strong {
   color: var(--sun);
   font-family: "Archive", sans-serif;
-  font-size: 0.72em;
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -937,6 +943,25 @@ img {
   color: var(--sun);
 }
 
+.display-cta {
+  margin: 0 auto 1.2rem;
+  color: var(--sun);
+  font: clamp(0.8rem, 1.4vw, 1rem)/1.5 ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+  text-align: center;
+}
+
+.display-cta a {
+  color: var(--silk);
+  font-family: "Archive", sans-serif;
+}
+
+.display-cta a:hover,
+.display-cta a:focus-visible {
+  outline: 2px solid var(--candy);
+  outline-offset: 3px;
+}
+
 .gesture-grid {
   min-width: 54rem;
   height: 25rem;
@@ -949,11 +974,6 @@ img {
   position: relative;
   overflow: hidden;
   text-align: center;
-  border-right: 1px dashed rgba(232, 155, 164, 0.6);
-}
-
-.gesture-grid article:last-child {
-  border-right: 0;
 }
 
 .gesture-grid h2 {
@@ -1085,7 +1105,7 @@ img {
 }
 
 .hasta-lab .lab-heading h1 strong {
-  font-size: 0.78em;
+  font-size: var(--archive-cap-match);
 }
 
 .lab-intro {
@@ -1632,7 +1652,7 @@ img {
 
 .rasa-lab .lab-heading h1 strong {
   color: var(--spice);
-  font-size: 0.78em;
+  font-size: var(--archive-cap-match);
 }
 
 .rasa-lab .lab-intro {
@@ -1719,10 +1739,7 @@ img {
 .rasa-grid article {
   padding: 0.5rem;
   text-align: center;
-  border-right: 1px dashed rgba(232, 155, 164, 0.6);
 }
-
-.rasa-grid article:last-child { border-right: 0; }
 
 .rasa-grid h2 {
   margin: 0;
@@ -1783,7 +1800,7 @@ img {
 
 .rasa-journal-heading h1 strong {
   font-family: "Archive", sans-serif;
-  font-size: 0.83em;
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -1814,7 +1831,7 @@ img {
   position: relative;
   width: 100%;
   max-width: 88rem;
-  margin: 0 auto;
+  margin: 0 auto clamp(4rem, 6vw, 6rem);
   padding-top: 1.7rem;
   display: grid;
   grid-template-columns: 0 1fr;
@@ -1891,8 +1908,9 @@ img {
 .rasa-story-entry textarea:placeholder-shown + button { display: none; }
 
 .rasa-picker {
-  flex: 1;
-  margin: clamp(4rem, 6vw, 6rem) calc(var(--page-pad) * -1) 0;
+  flex: 0 0 auto;
+  max-height: 17rem;
+  margin: auto calc(var(--page-pad) * -1) 0;
   padding: 1.4rem var(--page-pad) 1.8rem;
   background-color: var(--walnut);
   color: var(--sun);
@@ -2078,7 +2096,7 @@ img {
 
 .story-portal-heading h1 strong {
   font-family: "Archive", sans-serif;
-  font-size: 0.85em;
+  font-size: var(--archive-cap-match);
   text-transform: uppercase;
 }
 
@@ -2229,7 +2247,7 @@ img {
 }
 
 .pin-card h1 { margin: 0.4rem 0 2rem; color: var(--spice); font: 2.2rem/0.95 "Stellar", Georgia, serif; }
-.pin-card h1 strong { font-family: "Archive", sans-serif; text-transform: uppercase; }
+.pin-card h1 strong { font-family: "Archive", sans-serif; font-size: var(--archive-cap-match); text-transform: uppercase; }
 .pin-card label { display: block; margin-bottom: 0.45rem; font: 0.8rem ui-monospace, "Courier New", monospace; font-weight: 700; }
 .pin-card input { width: 100%; padding: 0.7rem; border: 2px solid var(--walnut); border-radius: 0; background: var(--silk); color: var(--walnut); font: 1.5rem ui-monospace, "Courier New", monospace; letter-spacing: 0.4em; }
 .pin-card button { width: 100%; margin-top: 1rem; padding: 0.85rem; }
@@ -2346,6 +2364,7 @@ img {
 
 @media (max-width: 760px) {
   .story-portal-guide { grid-template-columns: 1fr; gap: 1.5rem; margin-top: 4rem; }
+  .rasa-picker { max-height: none; }
   .rasa-options { grid-template-columns: repeat(4, minmax(5rem, 1fr)); }
 }
 
