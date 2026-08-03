@@ -13,12 +13,9 @@
       <a class="wordmark" href="./index.html"><strong>Natya</strong><span>Lab</span></a>
       <div class="nav-links">
         <a href="./index.html#about">About</a>
-        <a href="./hasta-archive.html">Hasta Archive</a>
-        <a href="./hasta-workbook.html" aria-current="page">Hasta Workbook</a>
-        <a href="./hasta-lab.html">Hasta Lab</a>
-        <a href="./rasa-lab.html">Rasa Lab</a>
-        <a href="./rasa-journal.html">Rasa Journal</a>
-        <a href="./story-portal.html">Story Portal</a>
+        <div class="nav-menu"><a href="./hasta-lab.html">Hasta Lab</a><div class="nav-submenu"><a href="./hasta-archive.html">Hasta Archive</a><a href="./hasta-workbook.html" aria-current="page">Hasta Workbook</a></div></div>
+        <div class="nav-menu"><a href="./rasa-lab.html">Rasa Lab</a><div class="nav-submenu"><a href="./rasa-journal.html">Rasa Journal</a></div></div>
+        <a href="./story-portal.html">Teacher Portal</a>
       </div>
     </nav>
 
@@ -28,9 +25,16 @@
           <div>
             <p class="section-label">Hasta workbook</p>
             <h1 id="matchTitle"><strong>Hasta</strong> <span>Match</span></h1>
+            <nav class="hasta-ctas" aria-label="Hasta pages">
+              <a href="./hasta-lab.html">Hasta Lab</a>
+              <a href="./hasta-archive.html">Hasta Archive</a>
+              <a href="./hasta-workbook.html" aria-current="page">Hasta Workbook</a>
+            </nav>
             <p>Drag each word onto the hasta it brings to mind. There are no right answers, and each hasta can hold more than one word.</p>
           </div>
           <div class="workbook-controls">
+            <button id="undoMatch" type="button" disabled>Undo</button>
+            <button id="redoMatch" type="button" disabled>Redo</button>
             <button id="resetMatch" type="button">Reset <span aria-hidden="true">&#8635;</span></button>
           </div>
         </div>
@@ -83,5 +87,6 @@
         <button class="dialog-submit" type="submit">Add interpretation</button>
       </form>
     </dialog>
+    <script src="./nav.js"></script>
   </body>
 </html>

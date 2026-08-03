@@ -13,18 +13,16 @@
       <a class="wordmark" href="./index.html"><strong>Natya</strong><span>Lab</span></a>
       <div class="nav-links">
         <a href="./index.html#about">About</a>
-        <a href="./hasta-archive.html">Hasta Archive</a>
-        <a href="./hasta-workbook.html">Hasta Workbook</a>
-        <a href="./hasta-lab.html">Hasta Lab</a>
-        <a href="./rasa-lab.html">Rasa Lab</a>
-        <a href="./rasa-journal.html">Rasa Journal</a>
-        <a href="./story-portal.html" aria-current="page">Story Portal</a>
+        <div class="nav-menu"><a href="./hasta-lab.html">Hasta Lab</a><div class="nav-submenu"><a href="./hasta-archive.html">Hasta Archive</a><a href="./hasta-workbook.html">Hasta Workbook</a></div></div>
+        <div class="nav-menu"><a href="./rasa-lab.html">Rasa Lab</a><div class="nav-submenu"><a href="./rasa-journal.html">Rasa Journal</a></div></div>
+        <a href="./story-portal.html" aria-current="page">Teacher Portal</a>
       </div>
     </nav>
 
     <main class="story-portal">
       <header class="story-portal-heading">
-        <h1><strong>Story</strong> Portal</h1>
+        <h1><strong>Teacher</strong> Portal</h1>
+        <p class="story-portal-subheading">FOR THE TEACHERS</p>
         <p>Supporting meaningful storytelling through Bharatanatyam.</p>
       </header>
 
@@ -46,12 +44,13 @@
     <div id="pinGate" class="pin-gate" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
       <form id="pinForm" class="pin-card">
         <p class="panel-label">Natya Lab</p>
-        <h1 id="pinTitle"><strong>Story</strong> Portal</h1>
+        <h1 id="pinTitle"><strong>Teacher</strong> Portal</h1>
         <label for="storyPin">Enter teacher PIN</label>
         <input id="storyPin" name="pin" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="4" required autofocus />
         <p id="pinError" class="pin-error" aria-live="polite"></p>
         <button type="submit">Enter portal</button>
       </form>
     </div>
+    <script src="./nav.js"></script>
   </body>
 </html>

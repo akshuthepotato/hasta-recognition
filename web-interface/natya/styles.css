@@ -95,6 +95,44 @@ img {
   text-transform: uppercase;
 }
 
+.nav-menu {
+  position: relative;
+}
+
+.nav-menu > a {
+  display: block;
+}
+
+.nav-submenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  min-width: 11rem;
+  padding: 0.65rem 0 0.65rem 0.7rem;
+  transform: translateX(-50%);
+  background: var(--spice);
+  box-shadow: none;
+  z-index: 10;
+}
+
+.nav-menu:focus-within .nav-submenu,
+.nav-menu.is-open .nav-submenu {
+  display: grid;
+}
+
+.nav-submenu a {
+  width: max-content;
+  padding: 0.45rem 0;
+  white-space: nowrap;
+}
+
+.lab-page .nav-submenu,
+.rasa-journal-page .nav-submenu,
+.story-portal-page .nav-submenu {
+  background: var(--forest);
+}
+
 .nav-links a {
   padding-bottom: 0.3rem;
   border-bottom: 1px solid transparent;
@@ -118,6 +156,12 @@ img {
 
 .workbook-page .wordmark {
   color: var(--sun);
+}
+
+.workbook-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(1);
 }
 
 .workbook {
@@ -759,18 +803,32 @@ img {
 }
 
 .about {
-  padding: clamp(5rem, 10vw, 10rem) var(--page-pad);
+  padding: clamp(5rem, 10vw, 10rem) var(--page-pad) 0;
   background-color: var(--spice);
   color: var(--silk);
-  border-top: 0.65rem solid var(--forest);
+}
+
+.current-method-heading {
+  margin: 0 auto clamp(2.5rem, 5vw, 4rem);
+  font: clamp(3.2rem, 8vw, 7rem)/0.9 "Stellar", Georgia, serif;
+  font-weight: 400;
+  text-align: center;
+}
+
+.current-method-heading strong {
+  color: var(--sun);
+  font-family: "Archive", sans-serif;
+  font-size: 0.78em;
+  text-transform: uppercase;
 }
 
 .section-lede {
   max-width: 54rem;
   margin: 0 auto clamp(4rem, 8vw, 7rem);
-  font-family: "Stellar", Georgia, serif;
-  font-size: clamp(2rem, 4vw, 3.5rem);
-  line-height: 1.15;
+  font-family: ui-monospace, "Courier New", monospace;
+  font-size: clamp(0.9rem, 1.5vw, 1.15rem);
+  font-weight: 700;
+  line-height: 1.75;
   text-align: center;
 }
 
@@ -824,15 +882,17 @@ img {
 .tradition-note {
   max-width: 59rem;
   margin: clamp(4rem, 7vw, 6rem) auto 0;
-  font-family: "Stellar", Georgia, serif;
-  font-size: clamp(1.2rem, 2.35vw, 1.9rem);
-  line-height: 1.2;
+  font-family: ui-monospace, "Courier New", monospace;
+  font-size: clamp(0.9rem, 1.5vw, 1.15rem);
+  font-weight: 700;
+  line-height: 1.75;
   text-align: center;
 }
 
 .about-copy {
-  max-width: 56rem;
-  margin: clamp(6rem, 11vw, 10rem) auto 0;
+  margin: clamp(6rem, 11vw, 10rem) calc(var(--page-pad) * -1) 0;
+  padding: clamp(4rem, 8vw, 7rem) var(--page-pad);
+  background: var(--forest);
   text-align: center;
 }
 
@@ -860,7 +920,13 @@ img {
   line-height: 1.8;
 }
 
+.about-copy p {
+  font-family: ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+}
+
 .gesture-rack {
+  position: relative;
   padding: 1.2rem var(--page-pad) 0;
   overflow: hidden;
   background: var(--forest);
@@ -873,9 +939,9 @@ img {
 
 .gesture-grid {
   min-width: 54rem;
-  height: 30rem;
+  height: 25rem;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(7, 1fr);
 }
 
 .gesture-grid article {
@@ -898,11 +964,38 @@ img {
 }
 
 .gesture-grid img {
+  display: block;
   width: 100%;
-  height: 28rem;
+  height: 23rem;
   margin: 0 auto;
   object-fit: contain;
   object-position: center top;
+}
+
+.gesture-carousel-button {
+  width: 2.4rem;
+  height: 2.4rem;
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  padding: 0;
+  border: 1px solid var(--sun);
+  border-radius: 0;
+  transform: translateY(-50%);
+  background: var(--spice);
+  color: var(--sun);
+  cursor: pointer;
+  font: 2rem/1 "Stellar", Georgia, serif;
+}
+
+.gesture-carousel-button.previous { left: 0.75rem; }
+.gesture-carousel-button.next { right: 0.75rem; }
+
+.gesture-carousel-button:hover,
+.gesture-carousel-button:focus-visible {
+  background: var(--walnut);
+  outline: 2px solid var(--candy);
+  outline-offset: 2px;
 }
 
 .hasta-lab {
@@ -921,9 +1014,70 @@ img {
 }
 
 .hasta-lab .lab-heading h1 {
-  margin: 0 0 clamp(4rem, 8vw, 7rem);
+  margin: 0 0 clamp(2rem, 4vw, 3rem);
   text-align: center;
   font-size: clamp(4rem, 10vw, 9rem);
+}
+
+.hasta-ctas,
+.rasa-ctas {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  margin-bottom: clamp(4rem, 8vw, 7rem);
+}
+
+.hasta-ctas a,
+.rasa-ctas a {
+  min-width: min(13rem, 100%);
+  padding: 0.85rem 1.2rem;
+  background: var(--spice);
+  color: var(--sun);
+  font: 0.9rem/1 "Archive", sans-serif;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.hasta-ctas a:hover,
+.hasta-ctas a:focus-visible,
+.rasa-ctas a:hover,
+.rasa-ctas a:focus-visible {
+  background: var(--walnut);
+  outline: 2px solid var(--spice);
+  outline-offset: 3px;
+}
+
+.rasa-ctas a {
+  background: var(--walnut);
+  color: var(--silk);
+}
+
+.rasa-ctas a:hover,
+.rasa-ctas a:focus-visible {
+  background: var(--spice);
+  outline-color: var(--walnut);
+}
+
+.archive-heading .hasta-ctas {
+  margin: clamp(2rem, 4vw, 3rem) 0 0;
+}
+
+.workbook-heading .hasta-ctas {
+  justify-content: flex-start;
+  margin: 1.5rem 0 2rem;
+}
+
+.workbook-heading .hasta-ctas a {
+  background: var(--sun);
+  color: var(--forest);
+}
+
+.workbook-heading .hasta-ctas a:hover,
+.workbook-heading .hasta-ctas a:focus-visible {
+  background: var(--candy);
+  outline-color: var(--sun);
 }
 
 .lab-heading h1 strong {
@@ -1450,25 +1604,6 @@ img {
   }
 }
 
-footer {
-  padding: 3rem var(--page-pad);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  background: var(--forest);
-  color: var(--silk);
-}
-
-footer .wordmark {
-  color: var(--sun);
-}
-
-footer p {
-  margin: 0;
-  font-size: 0.75rem;
-}
-
 .lab-page .nav {
   background: var(--forest);
   color: var(--silk);
@@ -1480,7 +1615,7 @@ footer p {
 
 .rasa-lab {
   min-height: calc(100vh - 5rem);
-  padding: clamp(5rem, 9vw, 9rem) var(--page-pad);
+  padding: clamp(5rem, 9vw, 9rem) var(--page-pad) 0;
   background: var(--candy);
 }
 
@@ -1490,7 +1625,7 @@ footer p {
 }
 
 .rasa-lab .lab-heading h1 {
-  margin: 0 0 clamp(4rem, 8vw, 7rem);
+  margin: 0 0 clamp(2rem, 4vw, 3rem);
   text-align: center;
   font-size: clamp(4rem, 10vw, 9rem);
 }
@@ -1541,6 +1676,10 @@ footer p {
   overflow: hidden;
 }
 
+.rasa-lab .rasa-ctas {
+  margin-bottom: clamp(4rem, 8vw, 7rem);
+}
+
 .rasa-reference > img {
   width: 100%;
   height: 14rem;
@@ -1560,6 +1699,45 @@ footer p {
     linear-gradient(90deg, rgba(253, 245, 216, 0.2) 1px, transparent 1px),
     #8e4b45;
   background-size: 4rem 4rem;
+}
+
+.rasa-rack {
+  margin: clamp(5rem, 9vw, 9rem) calc(var(--page-pad) * -1) 0;
+  padding: 1.5rem var(--page-pad) 0;
+  overflow: hidden;
+  background: var(--walnut);
+  color: var(--candy);
+}
+
+.rasa-grid {
+  min-width: 42rem;
+  height: 16rem;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.rasa-grid article {
+  padding: 0.5rem;
+  text-align: center;
+  border-right: 1px dashed rgba(232, 155, 164, 0.6);
+}
+
+.rasa-grid article:last-child { border-right: 0; }
+
+.rasa-grid h2 {
+  margin: 0;
+  font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rasa-grid img {
+  display: block;
+  width: 100%;
+  height: 13.5rem;
+  margin: 0 auto;
+  object-fit: contain;
+  object-position: center bottom;
 }
 
 .rasa-journal-page {
@@ -1582,21 +1760,25 @@ footer p {
 
 .rasa-journal {
   min-height: calc(100svh - 5rem);
-  padding: clamp(3.5rem, 7vw, 6.5rem) var(--page-pad) 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(3rem, 5vw, 5rem) var(--page-pad) 0;
   background-color: var(--candy);
 }
 
 .rasa-journal-heading {
+  flex-shrink: 0;
   display: block;
   max-width: 62rem;
-  margin: 0 auto clamp(2.3rem, 4vw, 3.5rem);
+  margin: 0 auto clamp(2.2rem, 3.5vw, 3rem);
   text-align: center;
   color: var(--walnut);
 }
 
 .rasa-journal-heading h1 {
   margin: 0;
-  font: clamp(3.5rem, 9vw, 7.8rem)/0.86 "Stellar", Georgia, serif;
+  color: var(--spice);
+  font: clamp(3.5rem, 8vw, 7.2rem)/0.86 "Stellar", Georgia, serif;
 }
 
 .rasa-journal-heading h1 strong {
@@ -1605,8 +1787,18 @@ footer p {
   text-transform: uppercase;
 }
 
+.rasa-journal-heading .rasa-ctas {
+  flex-wrap: nowrap;
+  margin: clamp(1.7rem, 3vw, 2.4rem) 0;
+}
+
+.rasa-journal-heading .rasa-ctas a {
+  flex: 1;
+  min-width: 0;
+}
+
 .rasa-journal-heading h2 {
-  margin: clamp(2rem, 4vw, 3rem) 0 1.3rem;
+  margin: clamp(1.7rem, 3vw, 2.4rem) 0 1.3rem;
   font: clamp(1.35rem, 3vw, 2.2rem)/1 "Archive", sans-serif;
   text-transform: uppercase;
 }
@@ -1618,7 +1810,9 @@ footer p {
 }
 
 .rasa-story-entry {
+  flex-shrink: 0;
   position: relative;
+  width: 100%;
   max-width: 88rem;
   margin: 0 auto;
   padding-top: 1.7rem;
@@ -1636,8 +1830,8 @@ footer p {
   padding: 0.3rem 0.75rem;
   background: var(--spice);
   color: var(--candy);
-  content: "−  ×";
-  font: 1.2rem/1 "Archive", sans-serif;
+  content: "⊖  ⊗";
+  font: 1rem/1 "Archive", sans-serif;
   letter-spacing: 0.2rem;
 }
 
@@ -1647,11 +1841,11 @@ footer p {
   display: block;
   grid-column: 2;
   width: 100%;
-  min-height: clamp(16rem, 25vw, 23rem);
+  min-height: clamp(16rem, 21vw, 20.75rem);
   padding: 1.35rem;
   resize: vertical;
   border: 0;
-  border-radius: 0;
+  border-radius: 0 0 0.55rem 0.55rem;
   background: var(--silk);
   color: var(--walnut);
   font: clamp(0.95rem, 1.6vw, 1.2rem)/1.5 ui-monospace, "Courier New", monospace;
@@ -1694,8 +1888,11 @@ footer p {
   text-transform: uppercase;
 }
 
+.rasa-story-entry textarea:placeholder-shown + button { display: none; }
+
 .rasa-picker {
-  margin: clamp(4rem, 7vw, 7rem) calc(var(--page-pad) * -1) 0;
+  flex: 1;
+  margin: clamp(4rem, 6vw, 6rem) calc(var(--page-pad) * -1) 0;
   padding: 1.4rem var(--page-pad) 1.8rem;
   background-color: var(--walnut);
   color: var(--sun);
@@ -1847,7 +2044,8 @@ footer p {
 
 .story-portal-page {
   min-height: 100svh;
-  background: var(--walnut);
+  overflow: hidden;
+  background: var(--spice);
   color: var(--walnut);
 }
 
@@ -1856,8 +2054,12 @@ footer p {
 }
 
 .story-portal {
-  min-height: calc(100svh - 5rem);
-  padding: clamp(3.5rem, 8vw, 7rem) var(--page-pad) 0;
+  height: calc(100svh - 5rem);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(1.5rem, 3vw, 3rem) var(--page-pad) 0;
   background-color: var(--sun);
 }
 
@@ -1880,6 +2082,14 @@ footer p {
   text-transform: uppercase;
 }
 
+.story-portal-subheading {
+  margin: 1rem 0 0;
+  color: var(--walnut);
+  font: clamp(1.5rem, 3vw, 2.4rem)/1 "Archive", sans-serif;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .story-portal-heading p {
   margin: 1.7rem 0 0;
   text-align: center;
@@ -1887,11 +2097,18 @@ footer p {
   font-weight: 700;
 }
 
+.story-portal-heading .story-portal-subheading {
+  margin-top: 1rem;
+  font: clamp(1.5rem, 3vw, 2.4rem)/1 "Archive", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
 .story-portal-guide {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: clamp(2rem, 5vw, 5rem);
-  margin: clamp(5rem, 11vw, 10rem) auto clamp(3.5rem, 7vw, 6rem);
+  margin: clamp(2rem, 4vw, 3.5rem) auto clamp(2rem, 4vw, 3.5rem);
   font: 0.88rem/1.55 ui-monospace, "Courier New", monospace;
   font-weight: 700;
 }
@@ -1913,6 +2130,8 @@ footer p {
 
 .story-carousel {
   display: grid;
+  flex: 1;
+  min-height: 0;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: stretch;
   margin-inline: calc(var(--page-pad) * -1);
@@ -1939,16 +2158,21 @@ footer p {
 
 .story-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.3rem;
+  row-gap: 1.3rem;
   margin: 0;
-  padding: clamp(3.5rem, 6vw, 6rem) var(--page-pad);
-  min-height: 23rem;
+  padding: clamp(2rem, 4vw, 3rem) var(--page-pad);
+  box-sizing: border-box;
+  min-height: 0;
+  grid-auto-rows: minmax(12rem, 24rem);
+  align-content: center;
   background-color: var(--walnut);
 }
 
 .story-card {
-  min-height: 16rem;
+  min-height: 12rem;
+  max-height: 24rem;
   padding: 0.55rem 1rem 1rem;
   cursor: pointer;
   outline: 3px solid transparent;
@@ -2036,6 +2260,11 @@ footer p {
     font-size: 0.62rem;
   }
 
+  .nav-submenu {
+    left: 0;
+    transform: none;
+  }
+
   .hero-content {
     min-height: calc(100svh - 7rem);
   }
@@ -2093,11 +2322,6 @@ footer p {
 
   .feed-stage {
     min-height: 28rem;
-  }
-
-  footer {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .rasa-prompt {

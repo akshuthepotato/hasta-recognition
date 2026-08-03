@@ -13,20 +13,22 @@
       <a class="wordmark" href="./index.html"><strong>Natya</strong><span>Lab</span></a>
       <div class="nav-links">
         <a href="./index.html#about">About</a>
-        <a href="./hasta-archive.html">Hasta Archive</a>
-        <a href="./hasta-workbook.html">Hasta Workbook</a>
-        <a href="./hasta-lab.html">Hasta Lab</a>
-        <a href="./rasa-lab.html">Rasa Lab</a>
-        <a href="./rasa-journal.html" aria-current="page">Rasa Journal</a>
-        <a href="./story-portal.html">Story Portal</a>
+        <div class="nav-menu"><a href="./hasta-lab.html">Hasta Lab</a><div class="nav-submenu"><a href="./hasta-archive.html">Hasta Archive</a><a href="./hasta-workbook.html">Hasta Workbook</a></div></div>
+        <div class="nav-menu"><a href="./rasa-lab.html">Rasa Lab</a><div class="nav-submenu"><a href="./rasa-journal.html" aria-current="page">Rasa Journal</a></div></div>
+        <a href="./story-portal.html">Teacher Portal</a>
       </div>
     </nav>
 
     <main class="rasa-journal" data-story-api="https://hasta-recognition-holy-darkness-1170.fly.dev/api/stories">
       <header class="rasa-journal-heading">
         <h1><strong>Rasa</strong> Journal</h1>
-        <h2>Your story matters</h2>
-        <p>Write about something that happened to you this week.<br />How did you feel about it? Share your story with us.</p>
+        <nav class="rasa-ctas" aria-label="Rasa pages">
+          <a href="./rasa-lab.html">Rasa Lab</a>
+          <a href="./rasa-journal.html" aria-current="page">Rasa Journal</a>
+          <a href="./story-portal.html">Teacher Portal</a>
+        </nav>
+        <h2>Students submit your stories</h2>
+        <p>Write about something that happened to you this week.<br />Which Rasa do you associate with your story?</p>
       </header>
 
       <section class="rasa-story-entry" aria-label="Write and tag your story">
@@ -45,6 +47,9 @@
           <button type="button" class="rasa-option" draggable="true" data-rasa="Karuna">
             <span>Karuna</span><img src="./assets/rasa/illustrations/Karuna.png" alt="Karuna, compassion" />
           </button>
+          <button type="button" class="rasa-option" draggable="true" data-rasa="Adbutham">
+            <span>Adbutha</span><img src="./assets/rasa/illustrations/adbutham.png" alt="Adbutham, surprise" />
+          </button>
           <button type="button" class="rasa-option" draggable="true" data-rasa="Raudram">
             <span>Raudram</span><img src="./assets/rasa/illustrations/raudram.png" alt="Raudram, anger" />
           </button>
@@ -53,9 +58,6 @@
           </button>
           <button type="button" class="rasa-option" draggable="true" data-rasa="Veeram">
             <span>Veeram</span><img src="./assets/rasa/illustrations/Veeram.png" alt="Veeram, courage" />
-          </button>
-          <button type="button" class="rasa-option" draggable="true" data-rasa="Adbutham">
-            <span>Adbutha</span><img src="./assets/rasa/illustrations/adbutham.png" alt="Adbutham, surprise" />
           </button>
           <button type="button" class="rasa-option" draggable="true" data-rasa="Shantham">
             <span>Shantham</span><img src="./assets/rasa/illustrations/shantham.png" alt="Shantham, peace" />
@@ -67,5 +69,6 @@
       </section>
     </main>
     <p id="journalStatus" class="sr-only" aria-live="polite"></p>
+    <script src="./nav.js"></script>
   </body>
 </html>

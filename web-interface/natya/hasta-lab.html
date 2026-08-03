@@ -18,49 +18,21 @@
       </a>
       <div class="nav-links">
         <a href="./index.html#about">About</a>
-        <a href="./hasta-archive.html">Hasta Archive</a>
-        <a href="./hasta-workbook.html">Hasta Workbook</a>
-        <a href="./hasta-lab.html" aria-current="page">Hasta Lab</a>
-        <a href="./rasa-lab.html">Rasa Lab</a>
-        <a href="./rasa-journal.html">Rasa Journal</a>
-        <a href="./story-portal.html">Story Portal</a>
+        <div class="nav-menu"><a href="./hasta-lab.html" aria-current="page">Hasta Lab</a><div class="nav-submenu"><a href="./hasta-archive.html">Hasta Archive</a><a href="./hasta-workbook.html">Hasta Workbook</a></div></div>
+        <div class="nav-menu"><a href="./rasa-lab.html">Rasa Lab</a><div class="nav-submenu"><a href="./rasa-journal.html">Rasa Journal</a></div></div>
+        <a href="./story-portal.html">Teacher Portal</a>
       </div>
     </nav>
 
     <main>
-      <section class="gesture-rack" id="archive">
-        <div class="gesture-grid">
-          <article id="archive-pathakam">
-            <h2>Pathaakam</h2>
-            <img src="./assets/hasta_illustrations/pathaakam.png" alt="Pathaakam hand gesture" />
-          </article>
-          <article id="archive-thripathakam">
-            <h2>Thripathaakam</h2>
-            <img
-              src="./assets/hasta_illustrations/thripathaakam.png"
-              alt="Thripathaakam hand gesture"
-            />
-          </article>
-          <article id="archive-ardhapathakam">
-            <h2>Ardhapathaakam</h2>
-            <img
-              src="./assets/hasta_illustrations/ardhapathaakam.png"
-              alt="Ardhapathaakam hand gesture"
-            />
-          </article>
-          <article id="archive-kartharimukham">
-            <h2>Kartharimukham</h2>
-            <img
-              src="./assets/hasta_illustrations/kartharimukham.png"
-              alt="Kartharimukham hand gesture"
-            />
-          </article>
-        </div>
-      </section>
-
       <section class="hasta-lab" id="live">
         <div class="lab-heading">
           <h1><strong>Hasta</strong> Lab</h1>
+          <nav class="hasta-ctas" aria-label="Hasta pages">
+            <a href="#live" aria-current="page">Hasta Lab</a>
+            <a href="./hasta-archive.html">Hasta Archive</a>
+            <a href="./hasta-workbook.html">Hasta Workbook</a>
+          </nav>
           <div class="lab-intro">
             <p>
               Hasta Lab is a hand gesture recognition learning tool that helps
@@ -117,6 +89,50 @@
           </div>
         </div>
       </section>
+
+      <section class="gesture-rack" id="archive" aria-label="Hasta carousel">
+        <button id="previousHastas" class="gesture-carousel-button previous" type="button" aria-label="Show previous hastas">‹</button>
+        <div class="gesture-grid" aria-live="polite">
+          <article id="archive-pathakam">
+            <h2>Pathaakam</h2>
+            <img src="./assets/hasta_illustrations/pathaakam.png" alt="Pathaakam hand gesture" />
+          </article>
+          <article id="archive-thripathakam">
+            <h2>Thripathaakam</h2>
+            <img
+              src="./assets/hasta_illustrations/thripathaakam.png"
+              alt="Thripathaakam hand gesture"
+            />
+          </article>
+          <article id="archive-ardhapathakam">
+            <h2>Ardhapathaakam</h2>
+            <img
+              src="./assets/hasta_illustrations/ardhapathaakam.png"
+              alt="Ardhapathaakam hand gesture"
+            />
+          </article>
+          <article id="archive-kartharimukham">
+            <h2>Kartharimukham</h2>
+            <img
+              src="./assets/hasta_illustrations/kartharimukham.png"
+              alt="Kartharimukham hand gesture"
+            />
+          </article>
+          <article id="archive-mayuram">
+            <h2>Mayuram</h2>
+            <img src="./assets/hasta_illustrations/Mayuram.png" alt="Mayuram hand gesture" />
+          </article>
+          <article id="archive-ardhachandram">
+            <h2>Ardhachandram</h2>
+            <img src="./assets/hasta_illustrations/ardhachandram.png" alt="Ardhachandram hand gesture" />
+          </article>
+          <article id="archive-araalam">
+            <h2>Araalam</h2>
+            <img src="./assets/hasta_illustrations/Araalam.png" alt="Araalam hand gesture" />
+          </article>
+        </div>
+        <button id="nextHastas" class="gesture-carousel-button next" type="button" aria-label="Show next hastas">›</button>
+      </section>
     </main>
 
     <dialog
@@ -147,5 +163,6 @@
 
     <div id="archiveList" hidden></div>
     <p id="status" class="sr-only" aria-live="polite">Page ready.</p>
+    <script src="./nav.js"></script>
   </body>
 </html>

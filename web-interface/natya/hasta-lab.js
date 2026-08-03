@@ -34,6 +34,35 @@ const meaningVideoSource = document.getElementById("meaningVideoSource");
 const meaningPerformer = document.getElementById("meaningPerformer");
 const pausedContext = pausedFrame.getContext("2d");
 const overlayContext = overlay.getContext("2d");
+const carouselCards = [...document.querySelectorAll(".gesture-grid article")];
+const carouselHastas = Object.entries(HASTAS);
+const previousHastas = document.getElementById("previousHastas");
+const nextHastas = document.getElementById("nextHastas");
+let carouselStart = 0;
+
+function carouselIndex(index) {
+  return (index + carouselHastas.length) % carouselHastas.length;
+}
+
+function renderHastaCarousel() {
+  carouselCards.forEach((card, offset) => {
+    const [key, hasta] = carouselHastas[carouselIndex(carouselStart + offset)];
+    card.id = `archive-${key}`;
+    card.querySelector("h2").textContent = hasta.name;
+    const image = card.querySelector("img");
+    image.src = hasta.image;
+    image.alt = `${hasta.name} hand gesture`;
+  });
+}
+
+function moveHastaCarousel(direction) {
+  carouselStart = carouselIndex(carouselStart + direction * carouselCards.length);
+  renderHastaCarousel();
+}
+
+previousHastas.addEventListener("click", () => moveHastaCarousel(-1));
+nextHastas.addEventListener("click", () => moveHastaCarousel(1));
+console.assert(carouselIndex(-1) === carouselHastas.length - 1);
 
 const HASTA_ALIASES = {
   pataka: "pathakam",

@@ -30,6 +30,8 @@ const storageKey = "natya-hasta-diary-v1";
 let selectedWord = null;
 let diaryPage = 0;
 let diaryEntries = loadDiaryEntries();
+const matchHistory = [];
+let historyIndex = -1;
 
 function loadDiaryEntries() {
   try {
@@ -45,6 +47,22 @@ function saveDiaryEntries() {
 
 function words() {
   return [...document.querySelectorAll(".word-chip")];
+}
+
+function snapshot() {
+  return Object.fromEntries(words().map((word) => [word.id, word.closest(".hasta-repository")?.dataset.hasta || null]));
+}
+
+function updateHistoryButtons() {
+  document.getElementById("undoMatch").disabled = historyIndex < 1;
+  document.getElementById("redoMatch").disabled = historyIndex >= matchHistory.length - 1;
+}
+
+function recordSnapshot() {
+  matchHistory.splice(historyIndex + 1);
+  matchHistory.push(snapshot());
+  historyIndex += 1;
+  updateHistoryButtons();
 }
 
 function updateCount() {
@@ -65,6 +83,7 @@ function placeWord(word, repository) {
   word.setAttribute("aria-pressed", "false");
   matchStatus.textContent = `${word.textContent} placed with ${repository.dataset.hasta}.`;
   updateCount();
+  recordSnapshot();
 }
 
 function render() {
@@ -100,6 +119,21 @@ function render() {
     chip.addEventListener("dragstart", (event) => event.dataTransfer.setData("text/plain", chip.id));
     return chip;
   }));
+  wordBank.addEventListener("dragover", (event) => event.preventDefault());
+  wordBank.addEventListener("drop", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const word = document.getElementById(event.dataTransfer.getData("text/plain"));
+    if (!word || !word.closest(".hasta-repository")) return;
+    wordBank.append(word);
+    matchStatus.textContent = `${word.textContent} returned to the word bank.`;
+    recordSnapshot();
+  });
+  if (historyIndex >= 0 && matchHistory[historyIndex]) {
+    Object.entries(matchHistory[historyIndex]).forEach(([id, hasta]) => {
+      if (hasta) document.querySelector(`[data-hasta="${hasta}"] .repository-words`).append(document.getElementById(id));
+    });
+  }
   updateCount();
 }
 
@@ -119,7 +153,33 @@ function renderDiary() {
   }));
 }
 
-document.getElementById("resetMatch").addEventListener("click", render);
+document.getElementById("resetMatch").addEventListener("click", () => {
+  historyIndex = -1;
+  render();
+  recordSnapshot();
+});
+document.getElementById("undoMatch").addEventListener("click", () => {
+  if (historyIndex < 1) return;
+  historyIndex -= 1;
+  render();
+  updateHistoryButtons();
+});
+document.getElementById("redoMatch").addEventListener("click", () => {
+  if (historyIndex >= matchHistory.length - 1) return;
+  historyIndex += 1;
+  render();
+  updateHistoryButtons();
+});
+document.addEventListener("dragover", (event) => event.preventDefault());
+document.addEventListener("drop", (event) => {
+  if (event.target.closest(".hasta-repository") || event.target.closest("#wordBank")) return;
+  const word = document.getElementById(event.dataTransfer.getData("text/plain"));
+  if (!word?.closest(".hasta-repository")) return;
+  event.preventDefault();
+  wordBank.append(word);
+  matchStatus.textContent = `${word.textContent} removed from its hasta.`;
+  recordSnapshot();
+});
 document.getElementById("previousDiaryPage").addEventListener("click", () => {
   diaryPage -= 1;
   renderDiary();
@@ -146,5 +206,6 @@ interpretationForm.addEventListener("submit", (event) => {
 });
 
 render();
+recordSnapshot();
 renderDiary();
 console.assert(Object.keys(HASTAS).length === 24 && WORDS.length === 80);

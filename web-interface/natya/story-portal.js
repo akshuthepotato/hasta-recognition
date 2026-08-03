@@ -10,7 +10,7 @@ const nextStories = document.getElementById("nextStories");
 let stories = [];
 let portalPin = sessionStorage.getItem("natya-story-portal-pin") || "";
 let storyPage = 0;
-const STORIES_PER_PAGE = 2;
+const STORIES_PER_PAGE = 6;
 const RASA_IMAGES = {
   Adbutham: "./assets/rasa/illustrations/adbutham.png",
   Bhayanakam: "./assets/rasa/illustrations/bhayanakam.png",

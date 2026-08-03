@@ -18,18 +18,20 @@
       </a>
       <div class="nav-links">
         <a href="./index.html#about">About</a>
-        <a href="./hasta-archive.html">Hasta Archive</a>
-        <a href="./hasta-workbook.html">Hasta Workbook</a>
-        <a href="./hasta-lab.html">Hasta Lab</a>
-        <a href="./rasa-lab.html" aria-current="page">Rasa Lab</a>
-        <a href="./rasa-journal.html">Rasa Journal</a>
-        <a href="./story-portal.html">Story Portal</a>
+        <div class="nav-menu"><a href="./hasta-lab.html">Hasta Lab</a><div class="nav-submenu"><a href="./hasta-archive.html">Hasta Archive</a><a href="./hasta-workbook.html">Hasta Workbook</a></div></div>
+        <div class="nav-menu"><a href="./rasa-lab.html" aria-current="page">Rasa Lab</a><div class="nav-submenu"><a href="./rasa-journal.html">Rasa Journal</a></div></div>
+        <a href="./story-portal.html">Teacher Portal</a>
       </div>
     </nav>
 
     <main class="rasa-lab">
       <header class="lab-heading">
         <h1><strong>Rasa</strong> Lab</h1>
+        <nav class="rasa-ctas" aria-label="Rasa pages">
+          <a href="./rasa-lab.html" aria-current="page">Rasa Lab</a>
+          <a href="./rasa-journal.html">Rasa Journal</a>
+          <a href="./story-portal.html">Teacher Portal</a>
+        </nav>
         <div class="lab-intro">
           <p>
             Rasa Lab is a facial recognition learning tool that helps dancers
@@ -86,7 +88,20 @@
           </button>
         </div>
       </section>
+
+      <section class="rasa-rack" aria-label="Rasas">
+        <div class="rasa-grid">
+          <article><h2>Hasyam</h2><img src="./assets/rasa/illustrations/hasyam.png" alt="Hasyam, laughter" /></article>
+          <article><h2>Adbutha</h2><img src="./assets/rasa/illustrations/adbutham.png" alt="Adbutha, surprise" /></article>
+          <article><h2>Shantham</h2><img src="./assets/rasa/illustrations/shantham.png" alt="Shantham, peace" /></article>
+          <article><h2>Bhayanakam</h2><img src="./assets/rasa/illustrations/bhayanakam.png" alt="Bhayanakam, fear" /></article>
+          <article><h2>Karuna</h2><img src="./assets/rasa/illustrations/Karuna.png" alt="Karuna, compassion" /></article>
+          <article><h2>Raudram</h2><img src="./assets/rasa/illustrations/raudram.png" alt="Raudram, anger" /></article>
+          <article><h2>Veeram</h2><img src="./assets/rasa/illustrations/Veeram.png" alt="Veeram, courage" /></article>
+        </div>
+      </section>
     </main>
     <p id="status" class="sr-only" aria-live="polite">Page ready.</p>
+    <script src="./nav.js"></script>
   </body>
 </html>

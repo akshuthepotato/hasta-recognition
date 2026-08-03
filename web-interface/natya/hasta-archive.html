@@ -18,18 +18,20 @@
       </a>
       <div class="nav-links">
         <a href="./index.html#about">About</a>
-        <a href="./hasta-archive.html" aria-current="page">Hasta Archive</a>
-        <a href="./hasta-workbook.html">Hasta Workbook</a>
-        <a href="./hasta-lab.html">Hasta Lab</a>
-        <a href="./rasa-lab.html">Rasa Lab</a>
-        <a href="./rasa-journal.html">Rasa Journal</a>
-        <a href="./story-portal.html">Story Portal</a>
+        <div class="nav-menu"><a href="./hasta-lab.html">Hasta Lab</a><div class="nav-submenu"><a href="./hasta-archive.html" aria-current="page">Hasta Archive</a><a href="./hasta-workbook.html">Hasta Workbook</a></div></div>
+        <div class="nav-menu"><a href="./rasa-lab.html">Rasa Lab</a><div class="nav-submenu"><a href="./rasa-journal.html">Rasa Journal</a></div></div>
+        <a href="./story-portal.html">Teacher Portal</a>
       </div>
     </nav>
 
     <main class="hasta-archive">
       <header class="archive-heading">
         <h1><strong>Hasta</strong> <strong>Archive</strong></h1>
+        <nav class="hasta-ctas" aria-label="Hasta pages">
+          <a href="./hasta-lab.html">Hasta Lab</a>
+          <a href="./hasta-archive.html" aria-current="page">Hasta Archive</a>
+          <a href="./hasta-workbook.html">Hasta Workbook</a>
+        </nav>
       </header>
       <section
         id="hastaArchiveGrid"
@@ -38,5 +40,6 @@
       ></section>
     </main>
     <a class="back-to-top" href="#top" aria-label="Back to top">^</a>
+    <script src="./nav.js"></script>
   </body>
 </html>
