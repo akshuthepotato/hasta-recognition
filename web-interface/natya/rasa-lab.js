@@ -7,7 +7,7 @@ const WASM_ROOT =
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
 const MODEL_ASSET_PATH = "./assets/rasa/face_landmarker.task";
 const CSV_PATH = "./assets/rasa/landmarks.csv";
-const HOLD_DURATION_MS = 6000;
+const HOLD_DURATION_MS = 3000;
 const MAX_GAP_MS = 600;
 const MAX_MISMATCH_MS = 600;
 const MATCH_THRESHOLD = 0.5;

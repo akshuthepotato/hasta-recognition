@@ -146,9 +146,22 @@ function renderDiary() {
   diaryPageLabel.textContent = `${diaryPage + 1} / ${diaryHastas.length}`;
   document.getElementById("previousDiaryPage").disabled = diaryPage === 0;
   document.getElementById("nextDiaryPage").disabled = diaryPage === diaryHastas.length - 1;
-  interpretationList.replaceChildren(...entries.map((entry) => {
+  interpretationList.replaceChildren(...entries.map((entry, index) => {
     const item = document.createElement("li");
-    item.textContent = entry;
+    const text = document.createElement("span");
+    const remove = document.createElement("button");
+    text.textContent = entry;
+    remove.type = "button";
+    remove.className = "delete-interpretation";
+    remove.setAttribute("aria-label", "Delete interpretation");
+    remove.textContent = "×";
+    remove.addEventListener("click", () => {
+      entries.splice(index, 1);
+      if (!entries.length) delete diaryEntries[key];
+      saveDiaryEntries();
+      renderDiary();
+    });
+    item.append(text, remove);
     return item;
   }));
 }

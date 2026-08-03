@@ -10,6 +10,13 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Ligconsolata";
+  src: url("./fonts/Ligconsolata-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
   --walnut: #5f1d07;
   --spice: #ae340b;
@@ -539,12 +546,35 @@ img {
 
 .interpretation-list li {
   padding: 0.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
   border-left: 3px solid var(--spice);
   background: rgba(253, 245, 216, 0.45);
   color: var(--spice);
   font-family: ui-monospace, "Courier New", monospace;
   font-size: 0.85rem;
   line-height: 1.45;
+}
+
+.delete-interpretation {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--spice);
+  cursor: pointer;
+  font: 1.4rem/1 "Archive", sans-serif;
+}
+
+.delete-interpretation:hover,
+.delete-interpretation:focus-visible {
+  background: var(--spice);
+  color: var(--silk);
+  outline: 2px solid var(--spice);
+  outline-offset: 2px;
 }
 
 .diary-reference-page img {
@@ -931,18 +961,6 @@ img {
   font-weight: 700;
 }
 
-.gesture-rack {
-  position: relative;
-  padding: 1.2rem var(--page-pad) 0;
-  overflow: hidden;
-  background: var(--forest);
-  color: var(--candy);
-}
-
-.gesture-rack > .section-label {
-  color: var(--sun);
-}
-
 .display-cta {
   margin: 0 auto 1.2rem;
   color: var(--sun);
@@ -962,62 +980,6 @@ img {
   outline-offset: 3px;
 }
 
-.gesture-grid {
-  min-width: 54rem;
-  height: 25rem;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-}
-
-.gesture-grid article {
-  padding: 1.4rem 0.5rem 0;
-  position: relative;
-  overflow: hidden;
-  text-align: center;
-}
-
-.gesture-grid h2 {
-  margin: 0;
-  font-size: clamp(0.85rem, 1.5vw, 1.15rem);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.gesture-grid img {
-  display: block;
-  width: 100%;
-  height: 23rem;
-  margin: 0 auto;
-  object-fit: contain;
-  object-position: center top;
-}
-
-.gesture-carousel-button {
-  width: 2.4rem;
-  height: 2.4rem;
-  position: absolute;
-  top: 50%;
-  z-index: 2;
-  padding: 0;
-  border: 1px solid var(--sun);
-  border-radius: 0;
-  transform: translateY(-50%);
-  background: var(--spice);
-  color: var(--sun);
-  cursor: pointer;
-  font: 2rem/1 "Stellar", Georgia, serif;
-}
-
-.gesture-carousel-button.previous { left: 0.75rem; }
-.gesture-carousel-button.next { right: 0.75rem; }
-
-.gesture-carousel-button:hover,
-.gesture-carousel-button:focus-visible {
-  background: var(--walnut);
-  outline: 2px solid var(--candy);
-  outline-offset: 2px;
-}
-
 .hasta-lab {
   padding: clamp(5rem, 9vw, 9rem) var(--page-pad);
   background: var(--sun);
@@ -1034,7 +996,7 @@ img {
 }
 
 .hasta-lab .lab-heading h1 {
-  margin: 0 0 clamp(2rem, 4vw, 3rem);
+  margin: 0 0 clamp(4rem, 8vw, 7rem);
   text-align: center;
   font-size: clamp(4rem, 10vw, 9rem);
 }
@@ -1102,10 +1064,6 @@ img {
 
 .lab-heading h1 strong {
   color: var(--spice);
-}
-
-.hasta-lab .lab-heading h1 strong {
-  font-size: var(--archive-cap-match);
 }
 
 .lab-intro {
@@ -1346,7 +1304,7 @@ img {
 .meaning-kicker {
   margin: 0;
   color: var(--sun);
-  font-family: "Stellar", Georgia, serif;
+  font-family: "Ligconsolata", ui-monospace, monospace;
   font-size: clamp(2.1rem, 3.5vw, 3.6rem);
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -2062,7 +2020,6 @@ img {
 
 .story-portal-page {
   min-height: 100svh;
-  overflow: hidden;
   background: var(--spice);
   color: var(--walnut);
 }
@@ -2072,11 +2029,10 @@ img {
 }
 
 .story-portal {
-  height: calc(100svh - 5rem);
+  min-height: calc(100svh - 5rem);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   padding: clamp(1.5rem, 3vw, 3rem) var(--page-pad) 0;
   background-color: var(--sun);
 }
@@ -2149,7 +2105,7 @@ img {
 .story-carousel {
   display: grid;
   flex: 1;
-  min-height: 0;
+  min-height: 18rem;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: stretch;
   margin-inline: calc(var(--page-pad) * -1);
@@ -2324,10 +2280,6 @@ img {
 
   .about-copy p br {
     display: none;
-  }
-
-  .gesture-rack {
-    overflow-x: auto;
   }
 
   .live-interface {
